@@ -36,8 +36,9 @@ LUALIB_API int luaopen_ffi(lua_State *L);
 
 LUALIB_API void luaL_openlibs(lua_State *L);
 
+LUALIB_API int lj_cf_loadfile(lua_State *L);
+
 #ifndef lua_assert
 #define lua_assert(x)	((void)0)
 #endif
-
 #endif

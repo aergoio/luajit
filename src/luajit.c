@@ -526,6 +526,9 @@ static int pmain(lua_State *L)
   }
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
+  luaopen_io(L);
+  luaopen_os(L);
+  lua_register(L, "loadfile", lj_cf_loadfile);
   lua_gc(L, LUA_GCRESTART, -1);
   if (!(flags & FLAGS_NOENV)) {
     s->status = handle_luainit(L);
