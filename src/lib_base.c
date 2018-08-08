@@ -369,7 +369,7 @@ static int load_aux(lua_State *L, int status, int envarg)
   }
 }
 
-LJLIB_CF(loadfile)
+LUALIB_API int lj_cf_loadfile(lua_State *L)
 {
   GCstr *fname = lj_lib_optstr(L, 1);
   GCstr *mode = lj_lib_optstr(L, 2);
@@ -380,26 +380,7 @@ LJLIB_CF(loadfile)
   return load_aux(L, status, 3);
 }
 
-static const char *reader_func(lua_State *L, void *ud, size_t *size)
-{
-  UNUSED(ud);
-  luaL_checkstack(L, 2, "too many nested functions");
-  copyTV(L, L->top++, L->base);
-  lua_call(L, 0, 1);  /* Call user-supplied function. */
-  L->top--;
-  if (tvisnil(L->top)) {
-    *size = 0;
-    return NULL;
-  } else if (tvisstr(L->top) || tvisnumber(L->top)) {
-    copyTV(L, L->base+4, L->top);  /* Anchor string in reserved stack slot. */
-    return lua_tolstring(L, 5, size);
-  } else {
-    lj_err_caller(L, LJ_ERR_RDRSTR);
-    return NULL;
-  }
-}
-
-LJLIB_CF(load)
+static int lj_cf_load(lua_State *L)
 {
   GCstr *name = lj_lib_optstr(L, 2);
   GCstr *mode = lj_lib_optstr(L, 3);
@@ -410,10 +391,7 @@ LJLIB_CF(load)
     status = luaL_loadbufferx(L, strdata(s), s->len, strdata(name ? name : s),
 			      mode ? strdata(mode) : NULL);
   } else {
-    lj_lib_checkfunc(L, 1);
-    lua_settop(L, 5);  /* Reserve a slot for the string from the reader. */
-    status = lua_loadx(L, reader_func, NULL, name ? strdata(name) : "=(load)",
-		       mode ? strdata(mode) : NULL);
+    lj_err_argt(L, 1, LUA_TSTRING);
   }
   return load_aux(L, status, 4);
 }
@@ -421,17 +399,6 @@ LJLIB_CF(load)
 LJLIB_CF(loadstring)
 {
   return lj_cf_load(L);
-}
-
-LJLIB_CF(dofile)
-{
-  GCstr *fname = lj_lib_optstr(L, 1);
-  setnilV(L->top);
-  L->top = L->base+1;
-  if (luaL_loadfile(L, fname ? strdata(fname) : NULL) != LUA_OK)
-    lua_error(L);
-  lua_call(L, 0, LUA_MULTRET);
-  return (int)(L->top - L->base) - 1;
 }
 
 /* -- Base library: GC control -------------------------------------------- */
@@ -673,7 +640,6 @@ LUALIB_API int luaopen_base(lua_State *L)
   lua_pushliteral(L, LUA_VERSION);  /* top-3. */
   newproxy_weaktable(L);  /* top-2. */
   LJ_LIB_REG(L, "_G", base);
-  LJ_LIB_REG(L, LUA_COLIBNAME, coroutine);
-  return 2;
+  return 1;
 }
 

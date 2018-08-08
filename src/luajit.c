@@ -535,6 +535,9 @@ static int pmain(lua_State *L)
   /* Stop collector during library initialization. */
   lua_gc(L, LUA_GCSTOP, 0);
   luaL_openlibs(L);
+  luaopen_io(L);
+  luaopen_os(L);
+  lua_register(L, "loadfile", lj_cf_loadfile);
   lua_gc(L, LUA_GCRESTART, -1);
 
   createargtable(L, argv, s->argc, argn);
