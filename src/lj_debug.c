@@ -392,6 +392,38 @@ void lj_debug_pushloc(lua_State *L, GCproto *pt, BCPos pc)
   }
 }
 
+const BCIns *lj_debug_callip(lua_State *L, GCproto **parent)
+{
+  int size;
+  cTValue *frame, *pframe;
+  GCfunc *fn;
+  GCproto *pt;
+  BCPos pc;
+  MMS mm;
+  const BCIns *ip;
+  frame = lj_debug_frame(L, 0, &size);
+  if (frame == NULL) {
+    return NULL;
+  }
+  pframe = lj_debug_frame(L, 1, &size);
+  if (pframe == NULL) {
+    return NULL;
+  }
+  fn = frame_func(pframe);
+  pc = debug_framepc(L, fn, frame);
+  if (pc == NO_BCPOS) {
+    return NULL;
+  }
+  pt = funcproto(fn); /* parent function */
+  ip = &proto_bc(pt)[check_exp(pc < pt->sizebc, pc)];
+  mm = bcmode_mm(bc_op(*ip));
+  if (mm != MM_call) {
+    return NULL;
+  }
+  *parent = pt;
+  return ip;
+}
+
 /* -- Public debug API ---------------------------------------------------- */
 
 /* lua_getupvalue() and lua_setupvalue() are in lj_api.c. */

@@ -44,6 +44,7 @@ LJ_FUNC int lj_debug_getinfo(lua_State *L, const char *what, lj_Debug *ar,
 LJ_FUNC void lj_debug_dumpstack(lua_State *L, SBuf *sb, const char *fmt,
 				int depth);
 #endif
+LJ_FUNC const BCIns *lj_debug_callip(lua_State *L, GCproto **parent);
 
 /* Fixed internal variable names. */
 #define VARNAMEDEF(_) \
