@@ -642,33 +642,6 @@ static void LJ_FASTCALL recff_math_minmax(jit_State *J, RecordFFData *rd)
   J->base[0] = tr;
 }
 
-static void LJ_FASTCALL recff_math_random(jit_State *J, RecordFFData *rd)
-{
-  GCudata *ud = udataV(&J->fn->c.upvalue[0]);
-  TRef tr, one;
-  lj_ir_kgc(J, obj2gco(ud), IRT_UDATA);  /* Prevent collection. */
-  tr = lj_ir_call(J, IRCALL_lj_math_random_step, lj_ir_kptr(J, uddata(ud)));
-  one = lj_ir_knum_one(J);
-  tr = emitir(IRTN(IR_SUB), tr, one);
-  if (J->base[0]) {
-    TRef tr1 = lj_ir_tonum(J, J->base[0]);
-    if (J->base[1]) {  /* d = floor(d*(r2-r1+1.0)) + r1 */
-      TRef tr2 = lj_ir_tonum(J, J->base[1]);
-      tr2 = emitir(IRTN(IR_SUB), tr2, tr1);
-      tr2 = emitir(IRTN(IR_ADD), tr2, one);
-      tr = emitir(IRTN(IR_MUL), tr, tr2);
-      tr = emitir(IRTN(IR_FPMATH), tr, IRFPM_FLOOR);
-      tr = emitir(IRTN(IR_ADD), tr, tr1);
-    } else {  /* d = floor(d*r1) + 1.0 */
-      tr = emitir(IRTN(IR_MUL), tr, tr1);
-      tr = emitir(IRTN(IR_FPMATH), tr, IRFPM_FLOOR);
-      tr = emitir(IRTN(IR_ADD), tr, one);
-    }
-  }
-  J->base[0] = tr;
-  UNUSED(rd);
-}
-
 /* -- Bit library fast functions ------------------------------------------ */
 
 /* Record bit.tobit. */

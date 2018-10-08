@@ -456,45 +456,6 @@ LJLIB_CF(newproxy)
   return 1;
 }
 
-LJLIB_PUSH("tostring")
-LJLIB_CF(print)
-{
-  ptrdiff_t i, nargs = L->top - L->base;
-  cTValue *tv = lj_tab_getstr(tabref(L->env), strV(lj_lib_upvalue(L, 1)));
-  int shortcut;
-  if (tv && !tvisnil(tv)) {
-    copyTV(L, L->top++, tv);
-  } else {
-    setstrV(L, L->top++, strV(lj_lib_upvalue(L, 1)));
-    lua_gettable(L, LUA_GLOBALSINDEX);
-    tv = L->top-1;
-  }
-  shortcut = (tvisfunc(tv) && funcV(tv)->c.ffid == FF_tostring);
-  for (i = 0; i < nargs; i++) {
-    cTValue *o = &L->base[i];
-    const char *str;
-    size_t size;
-    MSize len;
-    if (shortcut && (str = lj_strfmt_wstrnum(L, o, &len)) != NULL) {
-      size = len;
-    } else {
-      copyTV(L, L->top+1, o);
-      copyTV(L, L->top, L->top-1);
-      L->top += 2;
-      lua_call(L, 1, 1);
-      str = lua_tolstring(L, -1, &size);
-      if (!str)
-	lj_err_caller(L, LJ_ERR_PRTOSTR);
-      L->top--;
-    }
-    if (i)
-      putchar('\t');
-    fwrite(str, 1, size, stdout);
-  }
-  putchar('\n');
-  return 0;
-}
-
 LJLIB_PUSH(top-3)
 LJLIB_SET(_VERSION)
 
