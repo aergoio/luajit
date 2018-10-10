@@ -419,6 +419,12 @@ LUALIB_API lua_Integer luaL_optinteger(lua_State *L, int idx, lua_Integer def)
 #endif
 }
 
+LUALIB_API int luaL_isinteger(lua_State *L, int idx)
+{
+  cTValue *o = index2adr(L, idx);
+  return tvisint(o);
+}
+
 LUA_API int lua_toboolean(lua_State *L, int idx)
 {
   cTValue *o = index2adr(L, idx);

@@ -72,7 +72,7 @@ CCWARN= -Wall
 # as dynamic mode.
 #
 # Mixed mode creates a static + dynamic library and a statically linked luajit.
-BUILDMODE= mixed
+BUILDMODE= static
 #
 # Static mode creates a static library and a statically linked luajit.
 #BUILDMODE= static
@@ -109,7 +109,7 @@ XCFLAGS+= -DLUAJIT_DISABLE_FFI
 # dual-number (2) mode. Uncomment one of these lines to override the
 # default mode. Please see LJ_ARCH_NUMMODE in lj_arch.h for details.
 #XCFLAGS+= -DLUAJIT_NUMMODE=1
-#XCFLAGS+= -DLUAJIT_NUMMODE=2
+XCFLAGS+= -DLUAJIT_NUMMODE=2
 #
 ##############################################################################
 
