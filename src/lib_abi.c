@@ -114,7 +114,7 @@ static int lj_cf_abi_call(lua_State *L)
   fname = luaL_checkstring(L, 1);
   lua_getfield(L, -1, fname);
   if (!lua_isfunction(L, -1)) {
-    luaL_error(L, "cannot find the function: %s", fname);
+    luaL_error(L, "undefined function: %s", fname);
   }
   for (i = 2; i <= argc; i++) {
     lua_pushvalue(L, i);
