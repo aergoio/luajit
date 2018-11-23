@@ -60,7 +60,7 @@ static int lj_cf_abi_generate(lua_State *L)
 
   lua_getfield(L, LUA_ENVIRONINDEX, "apis");
   if (!lua_istable(L, -1)) {
-    return 0;
+    luaL_error(L, "no exported functions. you must add global function(s) to the " LUA_QL("abi.register()"));
   }
   lua_pushliteral(L, "{\"version\":\"0.1\",\"language\":\"lua\",\"functions\":[");
   setnilV(L->top++);
@@ -70,7 +70,8 @@ static int lj_cf_abi_generate(lua_State *L)
     }
     has_api = 1;
     if (!tvisstr(L->top-2) || !tvisfunc(L->top-1)) {
-      luaL_error(L, "cannot load the abi module");
+      luaL_error(L, "global function expected, got %s, check argument(s) in the " LUA_QL("abi.register()"), 
+              luaL_typename(L, -1));
     }
     name = strdata(strV(L->top-2));   /* key is function name */
     pt = funcproto(funcV(L->top-1));  /* value is function prototype */
@@ -90,7 +91,7 @@ static int lj_cf_abi_generate(lua_State *L)
     lua_pop(L, 1);  /* remove a value, the key is reused */
   }
   if (has_api == 0) {
-    return 0;
+    luaL_error(L, "no exported functions. you must add global function(s) to the " LUA_QL("abi.register()"));
   }
   lua_pushvalue(L, -1);
   lua_pushliteral(L, "}]}");
