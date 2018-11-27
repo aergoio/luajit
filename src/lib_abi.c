@@ -43,6 +43,21 @@ static int lj_cf_abi_register(lua_State *L)
   return 0;
 }
 
+static int lj_cf_abi_register_var(lua_State *L)
+{
+  const char *name;
+  const char *type;
+  name = luaL_checkstring(L, 1);
+  type = luaL_checkstring(L, 2);
+  if (luaL_findtable(L, LUA_ENVIRONINDEX, "state_vars", 0) != NULL) {
+    luaL_error(L, "cannot load the abi module");
+  }
+  lua_pushvalue(L, 1); /* name type t name */
+  lua_pushvalue(L, 2); /* name type t name type */
+  lua_rawset(L, -3);
+  return 0;
+}
+
 #define CONCAT(f) \
   do { \
     lua_pushvalue(L, -3); \
@@ -57,12 +72,13 @@ static int lj_cf_abi_generate(lua_State *L)
   int i;
   int has_api = 0;
   const char *name;
+  const char *type;
 
   lua_getfield(L, LUA_ENVIRONINDEX, "apis");
   if (!lua_istable(L, -1)) {
     luaL_error(L, "no exported functions. you must add global function(s) to the " LUA_QL("abi.register()"));
   }
-  lua_pushliteral(L, "{\"version\":\"0.1\",\"language\":\"lua\",\"functions\":[");
+  lua_pushliteral(L, "{\"version\":\"0.2\",\"language\":\"lua\",\"functions\":[");
   setnilV(L->top++);
   while (lua_next(L, -3)) {
     if (has_api == 1) {
@@ -93,8 +109,33 @@ static int lj_cf_abi_generate(lua_State *L)
   if (has_api == 0) {
     luaL_error(L, "no exported functions. you must add global function(s) to the " LUA_QL("abi.register()"));
   }
-  lua_pushvalue(L, -1);
-  lua_pushliteral(L, "}]}");
+  lua_getfield(L, LUA_ENVIRONINDEX, "state_vars");
+  if (lua_isnil(L, -1)) {
+      lua_pop(L, 1);
+      lua_pushliteral(L, "}]}");
+      lua_concat(L, 2);
+      return 1;
+  }
+  has_api = 0;
+  lua_pushvalue(L, -2);                             /* t(state_vars) str(functions[{) */
+  lua_pushliteral(L, "}],\"state_variables\":[");   /* t str str */
+  lua_concat(L, 2);                                 /* t str */
+  setnilV(L->top++);                                /* t str nil */
+  while (lua_next(L, -3)) {                         /* t str key val */
+    if (!tvisstr(L->top-2) || !tvisstr(L->top-1)) {
+      luaL_error(L, "invalid state variable");
+    }
+    if (has_api == 1) {
+      CONCAT(lua_pushliteral(L, ","));
+    }
+    has_api = 1;
+    name = strdata(strV(L->top-2));
+    type = strdata(strV(L->top-1));
+    CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
+    lua_pop(L, 1);  /* remove the value */
+
+  }
+  lua_pushstring(L, "]}");
   lua_concat(L, 2);
   return 1;
 }
@@ -126,6 +167,7 @@ static int lj_cf_abi_call(lua_State *L)
 
 static const luaL_Reg abi_lib[] = {
   {"register", lj_cf_abi_register},
+  {"register_var", lj_cf_abi_register_var},
   {"generate", lj_cf_abi_generate},
   {"call", lj_cf_abi_call},
   {NULL, NULL}
@@ -133,7 +175,7 @@ static const luaL_Reg abi_lib[] = {
 
 int luaopen_abi(lua_State *L)
 {
-  lua_createtable(L, 0, 1);
+  lua_createtable(L, 0, 2);
   lua_replace(L, LUA_ENVIRONINDEX);
   luaL_register(L, LUA_ABILIBNAME, abi_lib);
   return 1;
