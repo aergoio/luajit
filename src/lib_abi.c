@@ -45,10 +45,8 @@ static int lj_cf_abi_register(lua_State *L)
 
 static int lj_cf_abi_register_var(lua_State *L)
 {
-  const char *name;
-  const char *type;
-  name = luaL_checkstring(L, 1);
-  type = luaL_checkstring(L, 2);
+  luaL_checkstring(L, 1);
+  luaL_checkstring(L, 2);
   if (luaL_findtable(L, LUA_ENVIRONINDEX, "state_vars", 0) != NULL) {
     luaL_error(L, "cannot load the abi module");
   }
