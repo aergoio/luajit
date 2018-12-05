@@ -50,9 +50,15 @@ static int lj_cf_abi_register_var(lua_State *L)
   if (luaL_findtable(L, LUA_ENVIRONINDEX, "state_vars", 0) != NULL) {
     luaL_error(L, "cannot load the abi module");
   }
-  lua_pushvalue(L, 1); /* name type t name */
-  lua_pushvalue(L, 2); /* name type t name type */
-  lua_rawset(L, -3);
+  lua_pushvalue(L, 1);  /* name type t name */
+  lua_rawget(L, -2);    /* name type t type(or nil) */
+  if (!lua_isnil(L, -1)) {
+      luaL_error(L, "duplicated variable: " LUA_QL("%s"), lua_tostring(L, 1));
+  }
+  lua_pop(L, 1);        /* name type t */
+  lua_pushvalue(L, 1);  /* name type t name */
+  lua_pushvalue(L, 2);  /* name type t name type */
+  lua_rawset(L, -3);    /* name type t */
   return 0;
 }
 
