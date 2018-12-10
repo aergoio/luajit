@@ -380,27 +380,6 @@ LUALIB_API int lj_cf_loadfile(lua_State *L)
   return load_aux(L, status, 3);
 }
 
-static int lj_cf_load(lua_State *L)
-{
-  GCstr *name = lj_lib_optstr(L, 2);
-  GCstr *mode = lj_lib_optstr(L, 3);
-  int status;
-  if (L->base < L->top && (tvisstr(L->base) || tvisnumber(L->base))) {
-    GCstr *s = lj_lib_checkstr(L, 1);
-    lua_settop(L, 4);  /* Ensure env arg exists. */
-    status = luaL_loadbufferx(L, strdata(s), s->len, strdata(name ? name : s),
-			      mode ? strdata(mode) : NULL);
-  } else {
-    lj_err_argt(L, 1, LUA_TSTRING);
-  }
-  return load_aux(L, status, 4);
-}
-
-LJLIB_CF(loadstring)
-{
-  return lj_cf_load(L);
-}
-
 /* -- Base library: GC control -------------------------------------------- */
 
 LJLIB_CF(gcinfo)
