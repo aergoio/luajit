@@ -113,6 +113,7 @@ XCFLAGS+= -DLUAJIT_DISABLE_FFI
 #XCFLAGS+= -DLUAJIT_NUMMODE=1
 XCFLAGS+= -DLUAJIT_NUMMODE=2
 #
+XCFLAGS+= -DLUAJIT_ENABLE_CHECKHOOK
 ##############################################################################
 
 ##############################################################################
