@@ -30,6 +30,7 @@
 #define GCSWEEPMAX	40
 #define GCSWEEPCOST	10
 #define GCFINALIZECOST	100
+#define GCMEMMAXSIZE	(100*1024*1024)
 
 /* Macros to set GCobj colors and flags. */
 #define white2gray(x)		((x)->gch.marked &= (uint8_t)~LJ_GC_WHITES)
@@ -823,6 +824,9 @@ void *lj_mem_realloc(lua_State *L, void *p, MSize osz, MSize nsz)
   lua_assert((nsz == 0) == (p == NULL));
   lua_assert(checkptr32(p));
   g->gc.total = (g->gc.total - osz) + nsz;
+  if (g->gc.total >= GCMEMMAXSIZE) {
+    lj_err_mem(L);
+  }
   return p;
 }
 
@@ -835,6 +839,9 @@ void * LJ_FASTCALL lj_mem_newgco(lua_State *L, MSize size)
     lj_err_mem(L);
   lua_assert(checkptr32(o));
   g->gc.total += size;
+  if (g->gc.total >= GCMEMMAXSIZE) {
+    lj_err_mem(L);
+  }
   setgcrefr(o->gch.nextgc, g->gc.root);
   setgcref(g->gc.root, o);
   newwhite(g, o);
