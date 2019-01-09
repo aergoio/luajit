@@ -63,6 +63,8 @@ static void setprogdir(lua_State *L)
   }
 }
 
+#endif
+
 /* ------------------------------------------------------------------------ */
 
 static int readable(const char *filename)

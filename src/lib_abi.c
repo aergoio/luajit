@@ -7,6 +7,7 @@
 
 #include "lj_bc.h"
 #include "lj_debug.h"
+#include "lj_arch.h"
 
 #define ABI_ENV_APIS            "apis"
 #define ABI_ENV_FLAGS           "flags"
@@ -40,7 +41,7 @@
     ra = bc_a(*ip); \
     for (i = 1; i <= argc; i++) { \
       const char *cls, *varname; \
-      cls = lj_debug_slotname(parent, ip, ra + i, &varname); \
+      cls = lj_debug_slotname(parent, ip, ra + i + LJ_FR2, &varname); \
       if (NULL == cls || 0 != strcmp(cls, "global")) { \
         luaL_typerror((L), i, "global function"); \
       } \
