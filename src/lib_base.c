@@ -382,13 +382,13 @@ LUALIB_API int lj_cf_loadfile(lua_State *L)
 
 /* -- Base library: GC control -------------------------------------------- */
 
-LJLIB_CF(gcinfo)
+LUALIB_API int lj_cf_gcinfo(lua_State *L)
 {
   setintV(L->top++, (int32_t)(G(L)->gc.total >> 10));
   return 1;
 }
 
-LJLIB_CF(collectgarbage)
+LUALIB_API int lj_cf_collectgarbage(lua_State *L)
 {
   int opt = lj_lib_checkopt(L, 1, LUA_GCCOLLECT,  /* ORDER LUA_GC* */
     "\4stop\7restart\7collect\5count\1\377\4step\10setpause\12setstepmul\1\377\11isrunning");
