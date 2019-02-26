@@ -1,17 +1,32 @@
 #include <stdio.h>
 #include <inttypes.h>
-#include <time.h>
+#ifdef _MSC_VER
+# include <Windows.h>
+#else
+# include <time.h>
+#endif
 #include <errno.h>
 #include "lj_bc.h"
 
-
-void current_utc_time(struct timespec *ts) {
+double seconds(void)
+{
+#ifdef _MSC_VER
+  static LARGE_INTEGER frequency;
+  if (frequency.QuadPart == 0)
+    ::QueryPerformanceFrequency(&frequency);
+  LAREGE_INTEGER now;
+  ::QueryPerformanceCounter(&now);
+  return now.QuadPart / double(frequency.QuadPart);
+#else
   int rc;
-  rc = clock_gettime(CLOCK_MONOTONIC, ts);
+  struct timespec now;
+  rc = clock_gettime(CLOCK_MONOTONIC, &now);
   if (rc != 0) {
     printf("ec: %s\n", strerror(errno));
     exit(errno);
   }
+  return now.tv_sec + now.tv_nsec * 1.0e-9;
+#endif
 }
 
 typedef struct M {
@@ -28,19 +43,16 @@ BCDEF(BCM)
 #undef BCM
 
 int bOp = BC__MAX;
-struct timespec tstart;
+double start;
 
 void lj_measure_start(int op)
 {
-  struct timespec tend;
-  current_utc_time(&tend);
-  //printf("OP: %d, Name: %s\n", op, BCOpM[op].name);
+  double end = seconds();
   if (bOp != BC__MAX) {
-    BCOpM[bOp].totalTime += (((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) - ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec));
+    BCOpM[bOp].totalTime += (end - start);
   }
   bOp = op;
-  tstart.tv_sec = tend.tv_sec;
-  tstart.tv_nsec = tend.tv_nsec;
+  start = end;
   BCOpM[op].count++;
 }
 
