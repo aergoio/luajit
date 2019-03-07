@@ -15,6 +15,7 @@
 
 #define ABI_PROTO_FLAG_NONE     0x00
 #define ABI_PROTO_FLAG_PAYABLE  0x01
+#define ABI_PROTO_FLAG_VIEW     0x02
 
 #define REGISTER_EXPORTED_FUNCTION(L, flag) \
   do { \
@@ -41,6 +42,7 @@
     ra = bc_a(*ip); \
     for (i = 1; i <= argc; i++) { \
       const char *cls, *varname; \
+      int newflag; \
       cls = lj_debug_slotname(parent, ip, ra + i + LJ_FR2, &varname); \
       if (NULL == cls || 0 != strcmp(cls, "global")) { \
         luaL_typerror((L), i, "global function"); \
@@ -51,6 +53,10 @@
       lua_pushvalue((L), i); /* payable apis proto */ \
       lua_setfield((L), -2, varname); /* payable apis */ \
       lua_getfield((L), -2, varname); /* payable apis oldflag */ \
+      newflag = (flag)|lua_tointeger(L, -1); \
+      if ((newflag & ABI_PROTO_FLAG_PAYABLE) && (newflag & ABI_PROTO_FLAG_VIEW)) { \
+        luaL_error((L), "cannot payable for view function"); \
+      } \
       lua_pushinteger((L), (flag)|lua_tointeger(L, -1)); /* payable apis oldflag flag */ \
       lua_setfield((L), -4, varname); /* payable apis oldflag */ \
       lua_pop((L), 1); /* payable apis */ \
@@ -60,6 +66,12 @@
 static int lj_cf_abi_register(lua_State *L)
 {
   REGISTER_EXPORTED_FUNCTION(L, ABI_PROTO_FLAG_NONE);
+  return 0;
+}
+
+static int lj_cf_abi_register_view(lua_State *L)
+{
+  REGISTER_EXPORTED_FUNCTION(L, ABI_PROTO_FLAG_VIEW);
   return 0;
 }
 
@@ -111,26 +123,49 @@ static int lj_cf_abi_is_payable(lua_State *L)
 
 static int lj_cf_abi_resolve(lua_State *L)
 {
+  int flags;
   const char *fname;
   fname = luaL_checkstring(L, 1);
   lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_APIS);
   if (!lua_istable(L, -1)) {
     lua_pushnil(L);
-    return 1;
-
+    lua_pushnil(L);
+    lua_pushnil(L);
+    return 3;
   }
   lua_getfield(L, -1, fname);
-  if (lua_isfunction(L, -1)) {
-    lua_pushvalue(L, 1);
-    return 1;
+  if (!lua_isfunction(L, -1)) {
+      lua_getfield(L, -2, "default");
+      if (!lua_isfunction(L, -1)) {
+        lua_pushnil(L);
+        lua_pushnil(L);
+        lua_pushnil(L);
+        return 3;
+      }
+      fname = "default";
   }
-  lua_getfield(L, -2, "default");
-  if (lua_isfunction(L, -1)) {
-    lua_pushstring(L, "default");
-    return 1;
+  lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_FLAGS);
+  if (!lua_istable(L, -1)) {
+    lua_pushstring(L, fname);
+    lua_pushinteger(L, 0);
+    lua_pushinteger(L, 0);
+    return 3;
+  }
+
+  lua_getfield(L, -1, fname);
+  flags = lua_tointeger(L, -1);
+  lua_pushstring(L, fname);
+  if ((flags & ABI_PROTO_FLAG_PAYABLE) != 0) {
+      lua_pushinteger(L, 1);
   } else {
-    return 0;
+      lua_pushinteger(L, 0);
   }
+  if ((flags & ABI_PROTO_FLAG_VIEW) != 0) {
+      lua_pushinteger(L, 1);
+  } else {
+      lua_pushinteger(L, 0);
+  }
+  return 3;
 }
 
 static void autoload_function(lua_State *L, const char *fname)
@@ -203,11 +238,14 @@ static int lj_cf_abi_generate(lua_State *L)
       CONCAT(lua_pushliteral(L, "},"));
     }
     has_api = 1;
-    if (flag & ABI_PROTO_FLAG_PAYABLE) {
-        CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"payable\":true,\"arguments\":[", name));
-    } else {
-        CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"arguments\":[", name));
+    CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",", name));
+    if (flag & ABI_PROTO_FLAG_VIEW) {
+        CONCAT(lua_pushfstring(L, "\"view\":true,"));
     }
+    if (flag & ABI_PROTO_FLAG_PAYABLE) {
+        CONCAT(lua_pushfstring(L, "\"payable\":true,"));
+    }
+    CONCAT(lua_pushfstring(L, "\"arguments\":["));
     for (i = 1; i <= pt->numparams; i++) {
       name = lua_getlocal(L, NULL, i);
       if (i == pt->numparams && !(pt->flags & PROTO_VARARG)) {
@@ -282,6 +320,7 @@ static int lj_cf_abi_call(lua_State *L)
 
 static const luaL_Reg abi_lib[] = {
   {"register", lj_cf_abi_register},
+  {"register_view", lj_cf_abi_register_view},
   {"register_var", lj_cf_abi_register_var},
   {"payable", lj_cf_abi_register_payable},
   {"is_payable", lj_cf_abi_is_payable},
