@@ -37,7 +37,7 @@ typedef struct M {
   uint64_t count;
 } M;
 
-#define BCM(name, ma, mb, mc, mt)	{ #name, 0, 0 },
+#define BCM(name, ma, mb, mc, mt, gas)	{ #name, 0, 0 },
 M BCOpM[] = {
 BCDEF(BCM)
   {"", 0, 0}

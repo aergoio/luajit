@@ -588,6 +588,7 @@ typedef struct GCState {
   GCSize estimate;	/* Estimate of memory actually in use. */
   MSize stepmul;	/* Incremental GC step granularity. */
   MSize pause;		/* Pause between successive GC cycles. */
+  GCSize max;
 } GCState;
 
 /* Global state, shared by all threads of a Lua universe. */

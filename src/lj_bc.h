@@ -8,6 +8,7 @@
 
 #include "lj_def.h"
 #include "lj_arch.h"
+#include "lj_gas.h"
 
 /* Bytecode instruction format, 32 bit wide, fields of 8 or 16 bit:
 **
@@ -70,135 +71,135 @@
 */
 #define BCDEF(_) \
   /* Comparison ops. ORDER OPR. */ \
-  _(ISLT,	var,	___,	var,	lt) \
-  _(ISGE,	var,	___,	var,	lt) \
-  _(ISLE,	var,	___,	var,	le) \
-  _(ISGT,	var,	___,	var,	le) \
+  _(ISLT,	var,	___,	var,	lt,     GAS_FAST) \
+  _(ISGE,	var,	___,	var,	lt,     GAS_FAST) \
+  _(ISLE,	var,	___,	var,	le,     GAS_FAST) \
+  _(ISGT,	var,	___,	var,	le,     GAS_FAST) \
   \
-  _(ISEQV,	var,	___,	var,	eq) \
-  _(ISNEV,	var,	___,	var,	eq) \
-  _(ISEQS,	var,	___,	str,	eq) \
-  _(ISNES,	var,	___,	str,	eq) \
-  _(ISEQN,	var,	___,	num,	eq) \
-  _(ISNEN,	var,	___,	num,	eq) \
-  _(ISEQP,	var,	___,	pri,	eq) \
-  _(ISNEP,	var,	___,	pri,	eq) \
+  _(ISEQV,	var,	___,	var,	eq,     GAS_FAST) \
+  _(ISNEV,	var,	___,	var,	eq,     GAS_FAST) \
+  _(ISEQS,	var,	___,	str,	eq,     GAS_FAST) \
+  _(ISNES,	var,	___,	str,	eq,     GAS_FAST) \
+  _(ISEQN,	var,	___,	num,	eq,     GAS_FAST) \
+  _(ISNEN,	var,	___,	num,	eq,     GAS_FAST) \
+  _(ISEQP,	var,	___,	pri,	eq,     GAS_FAST) \
+  _(ISNEP,	var,	___,	pri,	eq,     GAS_FAST) \
   \
   /* Unary test and copy ops. */ \
-  _(ISTC,	dst,	___,	var,	___) \
-  _(ISFC,	dst,	___,	var,	___) \
-  _(IST,	___,	___,	var,	___) \
-  _(ISF,	___,	___,	var,	___) \
-  _(ISTYPE,	var,	___,	lit,	___) \
-  _(ISNUM,	var,	___,	lit,	___) \
+  _(ISTC,	dst,	___,	var,	___,    GAS_FASTEST) \
+  _(ISFC,	dst,	___,	var,	___,    GAS_FASTEST) \
+  _(IST,	___,	___,	var,	___,    GAS_FASTEST) \
+  _(ISF,	___,	___,	var,	___,    GAS_FASTEST) \
+  _(ISTYPE,	var,	___,	lit,	___,    GAS_FASTEST) \
+  _(ISNUM,	var,	___,	lit,	___,    GAS_FASTEST) \
   \
   /* Unary ops. */ \
-  _(MOV,	dst,	___,	var,	___) \
-  _(NOT,	dst,	___,	var,	___) \
-  _(UNM,	dst,	___,	var,	unm) \
-  _(LEN,	dst,	___,	var,	len) \
+  _(MOV,	dst,	___,	var,	___,    GAS_FAST) \
+  _(NOT,	dst,	___,	var,	___,    GAS_FASTEST) \
+  _(UNM,	dst,	___,	var,	unm,    GAS_FASTEST) \
+  _(LEN,	dst,	___,	var,	len,    GAS_MID) \
   \
   /* Binary ops. ORDER OPR. VV last, POW must be next. */ \
-  _(ADDVN,	dst,	var,	num,	add) \
-  _(SUBVN,	dst,	var,	num,	sub) \
-  _(MULVN,	dst,	var,	num,	mul) \
-  _(DIVVN,	dst,	var,	num,	div) \
-  _(MODVN,	dst,	var,	num,	mod) \
+  _(ADDVN,	dst,	var,	num,	add,    GAS_FAST) \
+  _(SUBVN,	dst,	var,	num,	sub,    GAS_FAST) \
+  _(MULVN,	dst,	var,	num,	mul,    GAS_MID) \
+  _(DIVVN,	dst,	var,	num,	div,    GAS_MID) \
+  _(MODVN,	dst,	var,	num,	mod,    GAS_MID) \
   \
-  _(ADDNV,	dst,	var,	num,	add) \
-  _(SUBNV,	dst,	var,	num,	sub) \
-  _(MULNV,	dst,	var,	num,	mul) \
-  _(DIVNV,	dst,	var,	num,	div) \
-  _(MODNV,	dst,	var,	num,	mod) \
+  _(ADDNV,	dst,	var,	num,	add,    GAS_FAST) \
+  _(SUBNV,	dst,	var,	num,	sub,    GAS_FAST) \
+  _(MULNV,	dst,	var,	num,	mul,    GAS_MID) \
+  _(DIVNV,	dst,	var,	num,	div,    GAS_MID) \
+  _(MODNV,	dst,	var,	num,	mod,    GAS_MID) \
   \
-  _(ADDVV,	dst,	var,	var,	add) \
-  _(SUBVV,	dst,	var,	var,	sub) \
-  _(MULVV,	dst,	var,	var,	mul) \
-  _(DIVVV,	dst,	var,	var,	div) \
-  _(MODVV,	dst,	var,	var,	mod) \
+  _(ADDVV,	dst,	var,	var,	add,    GAS_FAST) \
+  _(SUBVV,	dst,	var,	var,	sub,    GAS_FAST) \
+  _(MULVV,	dst,	var,	var,	mul,    GAS_MID) \
+  _(DIVVV,	dst,	var,	var,	div,    GAS_MID) \
+  _(MODVV,	dst,	var,	var,	mod,    GAS_MID) \
   \
-  _(POW,	dst,	var,	var,	pow) \
-  _(CAT,	dst,	rbase,	rbase,	concat) \
+  _(POW,	dst,	var,	var,	pow,    GAS_SLOW) \
+  _(CAT,	dst,	rbase,	rbase,	concat, GAS_SLOW) \
   \
   /* Constant ops. */ \
-  _(KSTR,	dst,	___,	str,	___) \
-  _(KCDATA,	dst,	___,	cdata,	___) \
-  _(KSHORT,	dst,	___,	lits,	___) \
-  _(KNUM,	dst,	___,	num,	___) \
-  _(KPRI,	dst,	___,	pri,	___) \
-  _(KNIL,	base,	___,	base,	___) \
+  _(KSTR,	dst,	___,	str,	___,    GAS_FASTEST) \
+  _(KCDATA,	dst,	___,	cdata,	___,    GAS_FASTEST) \
+  _(KSHORT,	dst,	___,	lits,	___,    GAS_FASTEST) \
+  _(KNUM,	dst,	___,	num,	___,    GAS_FASTEST) \
+  _(KPRI,	dst,	___,	pri,	___,    GAS_FASTEST) \
+  _(KNIL,	base,	___,	base,	___,    GAS_FASTEST) \
   \
   /* Upvalue and function ops. */ \
-  _(UGET,	dst,	___,	uv,	___) \
-  _(USETV,	uv,	___,	var,	___) \
-  _(USETS,	uv,	___,	str,	___) \
-  _(USETN,	uv,	___,	num,	___) \
-  _(USETP,	uv,	___,	pri,	___) \
-  _(UCLO,	rbase,	___,	jump,	___) \
-  _(FNEW,	dst,	___,	func,	gc) \
+  _(UGET,	dst,	___,	uv,	___,        GAS_FAST) \
+  _(USETV,	uv,	___,	var,	___,        GAS_FAST) \
+  _(USETS,	uv,	___,	str,	___,        GAS_FAST) \
+  _(USETN,	uv,	___,	num,	___,        GAS_FAST) \
+  _(USETP,	uv,	___,	pri,	___,        GAS_FAST) \
+  _(UCLO,	rbase,	___,	jump,	___,    GAS_FAST) \
+  _(FNEW,	dst,	___,	func,	gc,     GAS_FAST) \
   \
   /* Table ops. */ \
-  _(TNEW,	dst,	___,	lit,	gc) \
-  _(TDUP,	dst,	___,	tab,	gc) \
-  _(GGET,	dst,	___,	str,	index) \
-  _(GSET,	var,	___,	str,	newindex) \
-  _(TGETV,	dst,	var,	var,	index) \
-  _(TGETS,	dst,	var,	str,	index) \
-  _(TGETB,	dst,	var,	lit,	index) \
-  _(TGETR,	dst,	var,	var,	index) \
-  _(TSETV,	var,	var,	var,	newindex) \
-  _(TSETS,	var,	var,	str,	newindex) \
-  _(TSETB,	var,	var,	lit,	newindex) \
-  _(TSETM,	base,	___,	num,	newindex) \
-  _(TSETR,	var,	var,	var,	newindex) \
+  _(TNEW,	dst,	___,	lit,	gc,         GAS_FAST) \
+  _(TDUP,	dst,	___,	tab,	gc,         GAS_SLOW) \
+  _(GGET,	dst,	___,	str,	index,      GAS_MID) \
+  _(GSET,	var,	___,	str,	newindex,   GAS_MID) \
+  _(TGETV,	dst,	var,	var,	index,      GAS_FAST) \
+  _(TGETS,	dst,	var,	str,	index,      GAS_FAST) \
+  _(TGETB,	dst,	var,	lit,	index,      GAS_FAST) \
+  _(TGETR,	dst,	var,	var,	index,      GAS_FAST) \
+  _(TSETV,	var,	var,	var,	newindex,   GAS_FAST) \
+  _(TSETS,	var,	var,	str,	newindex,   GAS_FAST) \
+  _(TSETB,	var,	var,	lit,	newindex,   GAS_FAST) \
+  _(TSETM,	base,	___,	num,	newindex,   GAS_FAST) \
+  _(TSETR,	var,	var,	var,	newindex,   GAS_FAST) \
   \
   /* Calls and vararg handling. T = tail call. */ \
-  _(CALLM,	base,	lit,	lit,	call) \
-  _(CALL,	base,	lit,	lit,	call) \
-  _(CALLMT,	base,	___,	lit,	call) \
-  _(CALLT,	base,	___,	lit,	call) \
-  _(ITERC,	base,	lit,	lit,	call) \
-  _(ITERN,	base,	lit,	lit,	call) \
-  _(VARG,	base,	lit,	lit,	___) \
-  _(ISNEXT,	base,	___,	jump,	___) \
+  _(CALLM,	base,	lit,	lit,	call,      GAS_EXT) \
+  _(CALL,	base,	lit,	lit,	call,      GAS_EXT) \
+  _(CALLMT,	base,	___,	lit,	call,      GAS_EXT) \
+  _(CALLT,	base,	___,	lit,	call,      GAS_EXT) \
+  _(ITERC,	base,	lit,	lit,	call,      GAS_EXT) \
+  _(ITERN,	base,	lit,	lit,	call,      GAS_EXT) \
+  _(VARG,	base,	lit,	lit,	___,       GAS_SLOW) \
+  _(ISNEXT,	base,	___,	jump,	___,       GAS_FAST) \
   \
   /* Returns. */ \
-  _(RETM,	base,	___,	lit,	___) \
-  _(RET,	rbase,	___,	lit,	___) \
-  _(RET0,	rbase,	___,	lit,	___) \
-  _(RET1,	rbase,	___,	lit,	___) \
+  _(RETM,	base,	___,	lit,	___,    GAS_SLOW) \
+  _(RET,	rbase,	___,	lit,	___,    GAS_FASTEST) \
+  _(RET0,	rbase,	___,	lit,	___,    GAS_FASTEST) \
+  _(RET1,	rbase,	___,	lit,	___,    GAS_FAST) \
   \
   /* Loops and branches. I/J = interp/JIT, I/C/L = init/call/loop. */ \
-  _(FORI,	base,	___,	jump,	___) \
-  _(JFORI,	base,	___,	jump,	___) \
+  _(FORI,	base,	___,	jump,	___,    GAS_FASTEST) \
+  _(JFORI,	base,	___,	jump,	___,    GAS_FASTEST) \
   \
-  _(FORL,	base,	___,	jump,	___) \
-  _(IFORL,	base,	___,	jump,	___) \
-  _(JFORL,	base,	___,	lit,	___) \
+  _(FORL,	base,	___,	jump,	___,    GAS_FASTEST) \
+  _(IFORL,	base,	___,	jump,	___,    GAS_FASTEST) \
+  _(JFORL,	base,	___,	lit,	___,    GAS_FASTEST) \
   \
-  _(ITERL,	base,	___,	jump,	___) \
-  _(IITERL,	base,	___,	jump,	___) \
-  _(JITERL,	base,	___,	lit,	___) \
+  _(ITERL,	base,	___,	jump,	___,    GAS_FASTEST) \
+  _(IITERL,	base,	___,	jump,	___,    GAS_FASTEST) \
+  _(JITERL,	base,	___,	lit,	___,    GAS_FASTEST) \
   \
-  _(LOOP,	rbase,	___,	jump,	___) \
-  _(ILOOP,	rbase,	___,	jump,	___) \
-  _(JLOOP,	rbase,	___,	lit,	___) \
+  _(LOOP,	rbase,	___,	jump,	___,    GAS_FASTEST) \
+  _(ILOOP,	rbase,	___,	jump,	___,    GAS_FASTEST) \
+  _(JLOOP,	rbase,	___,	lit,	___,    GAS_FASTEST) \
   \
-  _(JMP,	rbase,	___,	jump,	___) \
+  _(JMP,	rbase,	___,	jump,	___,    GAS_FASTEST) \
   \
   /* Function headers. I/J = interp/JIT, F/V/C = fixarg/vararg/C func. */ \
-  _(FUNCF,	rbase,	___,	___,	___) \
-  _(IFUNCF,	rbase,	___,	___,	___) \
-  _(JFUNCF,	rbase,	___,	lit,	___) \
-  _(FUNCV,	rbase,	___,	___,	___) \
-  _(IFUNCV,	rbase,	___,	___,	___) \
-  _(JFUNCV,	rbase,	___,	lit,	___) \
-  _(FUNCC,	rbase,	___,	___,	___) \
-  _(FUNCCW,	rbase,	___,	___,	___)
+  _(FUNCF,	rbase,	___,	___,	___,    GAS_ZERO) \
+  _(IFUNCF,	rbase,	___,	___,	___,    GAS_ZERO) \
+  _(JFUNCF,	rbase,	___,	lit,	___,    GAS_ZERO) \
+  _(FUNCV,	rbase,	___,	___,	___,    GAS_ZERO) \
+  _(IFUNCV,	rbase,	___,	___,	___,    GAS_ZERO) \
+  _(JFUNCV,	rbase,	___,	lit,	___,    GAS_ZERO) \
+  _(FUNCC,	rbase,	___,	___,	___,    GAS_ZERO) \
+  _(FUNCCW,	rbase,	___,	___,	___,    GAS_ZERO)
 
 /* Bytecode opcode numbers. */
 typedef enum {
-#define BCENUM(name, ma, mb, mc, mt)	BC_##name,
+#define BCENUM(name, ma, mb, mc, mt, gas)	BC_##name,
 BCDEF(BCENUM)
 #undef BCENUM
   BC__MAX
@@ -250,7 +251,7 @@ typedef enum {
 #define bcmode_hasd(op)	((lj_bc_mode[op] & (15<<3)) == (BCMnone<<3))
 #define bcmode_mm(op)	((MMS)(lj_bc_mode[op]>>11))
 
-#define BCMODE(name, ma, mb, mc, mm) \
+#define BCMODE(name, ma, mb, mc, mm, gas) \
   (BCM##ma|(BCM##mb<<3)|(BCM##mc<<7)|(MM_##mm<<11)),
 #define BCMODE_FF	0
 

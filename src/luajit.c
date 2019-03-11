@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 #define luajit_c
 
@@ -19,6 +20,7 @@
 
 #include "lj_arch.h"
 #include "lj_measure.h"
+#include "lj_dispatch.h"
 
 #if LJ_TARGET_POSIX
 #include <unistd.h>

@@ -194,9 +194,9 @@
 |// Instruction headers.
 |
 |.macro ins_header
-|.if MEASURE
 |  cmp OP, BC_FUNCC+2	// Fast function
 |  jae >1
+|.if MEASURE
 |  push RA
 |  push RC
 |  mov CARG1d, OP
@@ -205,8 +205,16 @@
 |  mov BASE, RB
 |  pop RC
 |  pop RA
-|1:
+|.else
+|  movzx TMPR, word [DISPATCH+OP*2+GG_DISP2GAS]
+|  sub [DISPATCH+GG_DISP2TGAS], TMPR
+|  ja >1
+|  mov L:CARG1, SAVE_L
+|  mov L:CARG1->base, BASE
+|  mov L:CARG1->top, BASE
+|  call extern lj_err_gas
 |.endif
+|1:
 |.endmacro
 |.macro ins_A
 |  ins_header
@@ -2403,8 +2411,10 @@ static void build_subroutines(BuildCtx *ctx)
   |  cmp RDd, RBd
   |  je ->cont_nop			// Blacklisted.
   |  test RDd, RDd
-  |  jne =>BC_JLOOP			// Jump to stitched trace.
-  |
+  |  je >1
+  |  mov OP, BC_JLOOP
+  |  jmp =>BC_JLOOP
+  |1:
   |  // Stitch a new trace to the previous trace.
   |  mov [DISPATCH+DISPATCH_J(exitno)], RB
   |  mov L:RB, SAVE_L
@@ -4386,7 +4396,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       } else if (op == BC_JFORI) {
 	|  branchPC RD
 	|  movzx RDd, PC_RD
-	|  jle =>BC_JLOOP
+	|  jg >1
+	|  mov OP, BC_JLOOP
+	|  jmp =>BC_JLOOP
 	|1:
 	|6:
       } else if (op == BC_IFORL) {
@@ -4395,7 +4407,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
 	|  branchPC RD
 	|1:
       } else {
-	|  jle =>BC_JLOOP
+	|  jg >1
+	|  mov OP, BC_JLOOP
+	|  jmp =>BC_JLOOP
 	|1:
 	|6:
       }
@@ -4418,11 +4432,17 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       } else if (op == BC_JFORI) {
 	|  branchPC RD
 	|  movzx RDd, PC_RD
-	|  jge =>BC_JLOOP
+	|  jl >1
+	|  mov OP, BC_JLOOP
+	|  jmp =>BC_JLOOP
+	|1:
       } else if (op == BC_IFORL) {
 	|  jl <7
       } else {
-	|  jge =>BC_JLOOP
+	|  jl >1
+	|  mov OP, BC_JLOOP
+	|  jmp =>BC_JLOOP
+	|1:
       }
       |  jmp <6
       |9:  // Fallback to FP variant.
@@ -4466,7 +4486,10 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
     } else if (op == BC_JFORI) {
       |  branchPC RD
       |  movzx RDd, PC_RD
-      |  jnb =>BC_JLOOP
+      |  jb >1
+      |  mov OP, BC_JLOOP 
+      |  jmp =>BC_JLOOP
+      |1:
     } else if (op == BC_IFORL) {
       |.if DUALNUM
       |  jb <7
@@ -4475,7 +4498,10 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       |  branchPC RD
       |.endif
     } else {
-      |  jnb =>BC_JLOOP
+      |  jb >1
+      |  mov OP, BC_JLOOP
+      |  jmp =>BC_JLOOP
+      |1:
     }
     |.if DUALNUM
     |  jmp <6
@@ -4507,6 +4533,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
     |  cmp RB, LJ_TNIL; je >1		// Stop if iterator returned nil.
     if (op == BC_JITERL) {
       |  mov [RA-8], RB
+      |  mov OP, BC_JLOOP
       |  jmp =>BC_JLOOP
     } else {
       |  branchPC RD			// Otherwise save control var + branch.

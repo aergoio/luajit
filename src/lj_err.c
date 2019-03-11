@@ -811,6 +811,15 @@ LJ_NOINLINE void lj_err_argt(lua_State *L, int narg, int tt)
   lj_err_argtype(L, narg, lj_obj_typename[tt+1]);
 }
 
+LJ_NOINLINE void lj_err_gas(lua_State *L)
+{
+  if (L->status == LUA_ERRERR+1)  /* Don't touch the stack during lua_open. */
+    lj_vm_unwind_c(L->cframe, LUA_ERRRUN);
+  L->status = LUA_ERRRUN;
+  setstrV(L, L->top++, lj_err_str(L, LJ_ERR_ERRGAS));
+  lj_err_throw(L, LUA_ERRRUN);
+}
+
 /* -- Public error handling API ------------------------------------------- */
 
 LUA_API lua_CFunction lua_atpanic(lua_State *L, lua_CFunction panicf)

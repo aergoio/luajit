@@ -26,6 +26,7 @@
 #endif
 #include "lj_trace.h"
 #include "lj_vm.h"
+#include "lj_gas.h"
 
 #define GCSTEPSIZE	1024u
 #define GCSWEEPMAX	40
@@ -809,6 +810,27 @@ void lj_gc_barriertrace(global_State *g, uint32_t traceno)
 }
 #endif
 
+#if 0
+static void lj_gc_gas(lua_State *L, GCSize osz, GCSize nsz)
+{
+  global_State *g = G(L);
+  GCSize ntsz = (g->gc.total - osz) + nsz;
+  if (ntsz > g->gc.max) {
+    GCSize d = ntsz - g->gc.max;
+    if (L->status == LUA_OK)
+        lj_gas_use(L, (uint64_t)(d * GAS_MEM));
+    g->gc.max = ntsz;
+  }
+}
+
+/* TODO aergo extention module 까지 오픈하고 total_gas 와 max 설정 */
+void lj_gc_setmax(lua_State *L)
+{
+  global_State *g = G(L);
+  g->gc.max = g->gc.total;
+}
+#endif
+
 /* -- Allocator ----------------------------------------------------------- */
 
 /* Call pluggable memory allocator to allocate or resize a fragment. */
@@ -826,6 +848,7 @@ void *lj_mem_realloc(lua_State *L, void *p, GCSize osz, GCSize nsz)
   }
   lua_assert((nsz == 0) == (p == NULL));
   lua_assert(checkptrGC(p));
+  /*lj_gc_gas(L, osz, nsz);*/
   g->gc.total = (g->gc.total - osz) + nsz;
   return p;
 }
@@ -844,6 +867,7 @@ void * LJ_FASTCALL lj_mem_newgco(lua_State *L, GCSize size)
     lj_err_mem(L);
   }
   lua_assert(checkptrGC(o));
+  /*lj_gc_gas(L, (GCSize)0, size);*/
   g->gc.total += size;
   setgcrefr(o->gch.nextgc, g->gc.root);
   setgcref(g->gc.root, o);
