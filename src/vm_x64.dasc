@@ -192,13 +192,47 @@
 |//-----------------------------------------------------------------------
 |
 |// Instruction headers.
-|.macro ins_A; .endmacro
-|.macro ins_AD; .endmacro
-|.macro ins_AJ; .endmacro
-|.macro ins_ABC; movzx RBd, RCH; movzx RCd, RCL; .endmacro
-|.macro ins_AB_; movzx RBd, RCH; .endmacro
-|.macro ins_A_C; movzx RCd, RCL; .endmacro
-|.macro ins_AND; not RD; .endmacro
+|
+|.macro ins_header
+|.if MEASURE
+|  cmp OP, BC_FUNCC+2	// Fast function
+|  jae >1
+|  push RA
+|  push RC
+|  mov CARG1d, OP
+|  mov RB, BASE
+|  call extern lj_measure_start
+|  mov BASE, RB
+|  pop RC
+|  pop RA
+|1:
+|.endif
+|.endmacro
+|.macro ins_A
+|  ins_header
+|.endmacro
+|.macro ins_AD
+|  ins_header
+|.endmacro
+|.macro ins_AJ
+|  ins_header
+|.endmacro
+|.macro ins_ABC
+|  ins_header
+|  movzx RBd, RCH; movzx RCd, RCL
+|.endmacro
+|.macro ins_AB_
+|  ins_header
+|  movzx RBd, RCH
+|.endmacro
+|.macro ins_A_C
+|  ins_header
+|  movzx RCd, RCL
+|.endmacro
+|.macro ins_AND
+|  ins_header
+|  not RD;
+|.endmacro
 |
 |// Instruction decode+dispatch. Carefully tuned (nope, lodsd is not faster).
 |.macro ins_NEXT

@@ -7,6 +7,7 @@
 */
 
 #include <stdio.h>
+#include <time.h>
 
 #define lib_base_c
 #define LUA_LIB
@@ -379,6 +380,15 @@ LUALIB_API int lj_cf_loadfile(lua_State *L)
 			  mode ? strdata(mode) : NULL);
   return load_aux(L, status, 3);
 }
+
+LUALIB_API int lj_cf_nsec(lua_State *L)
+{
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  lua_pushnumber(L, (lua_Number)((double)t.tv_sec + t.tv_nsec * 1.0e-9));
+  return 1;
+}
+
 
 /* -- Base library: GC control -------------------------------------------- */
 

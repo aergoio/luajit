@@ -18,6 +18,7 @@
 #include "luajit.h"
 
 #include "lj_arch.h"
+#include "lj_measure.h"
 
 #if LJ_TARGET_POSIX
 #include <unistd.h>
@@ -537,7 +538,10 @@ static int pmain(lua_State *L)
   luaL_openlibs(L);
   luaopen_io(L);
   luaopen_os(L);
+  luaopen_jit(L);
+  luaopen_debug(L);
   lua_register(L, "loadfile", lj_cf_loadfile);
+  lua_register(L, "nsec", lj_cf_nsec);
   lua_gc(L, LUA_GCRESTART, -1);
 
   createargtable(L, argv, s->argc, argn);
@@ -585,6 +589,7 @@ int main(int argc, char **argv)
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);
+  lj_measure_output();
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
