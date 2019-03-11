@@ -24,6 +24,7 @@ static const luaL_Reg lj_lib_load[] = {
 #if LJ_ENABLE_DEBUG
   { LUA_DBLIBNAME,  luaopen_debug },
   { LUA_IOLIBNAME,	luaopen_io },
+  { LUA_OSLIBNAME,	luaopen_os },
   { LUA_JITLIBNAME,	luaopen_jit },
 #endif
   { LUA_BITLIBNAME,	luaopen_bit },
