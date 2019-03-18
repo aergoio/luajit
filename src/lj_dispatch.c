@@ -78,7 +78,7 @@ void lj_dispatch_init(GG_State *GG)
 #if LJ_TARGET_MIPS
   memcpy(GG->got, dispatch_got, LJ_GOT__MAX*sizeof(ASMFunction *));
 #endif
-  GG->total_gas = 600000;
+  GG->total_gas = 0;
   memcpy(GG->gas, bc_gas, sizeof(bc_gas));
 }
 

@@ -195,7 +195,7 @@
 |
 |.macro ins_header
 |  cmp OP, BC_FUNCC+2	// Fast function
-|  jae >1
+|  jae >2
 |.if MEASURE
 |  push RA
 |  push RC
@@ -206,16 +206,21 @@
 |  pop RC
 |  pop RA
 |.else
+|  cmp qword [DISPATCH+GG_DISP2TGAS], 0
+|  je >2
 |  movzx TMPR, word [DISPATCH+OP*2+GG_DISP2GAS]
-|  sub [DISPATCH+GG_DISP2TGAS], TMPR
+|  cmp qword [DISPATCH+GG_DISP2TGAS], TMPR
 |  ja >1
 |  mov L:CARG1, SAVE_L
 |  mov L:CARG1->base, BASE
 |  mov L:CARG1->top, BASE
 |  call extern lj_err_gas
-|.endif
 |1:
+|  sub [DISPATCH+GG_DISP2TGAS], TMPR
+|.endif
+|2:
 |.endmacro
+
 |.macro ins_A
 |  ins_header
 |.endmacro

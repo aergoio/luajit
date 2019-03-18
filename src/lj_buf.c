@@ -13,6 +13,7 @@
 #include "lj_str.h"
 #include "lj_tab.h"
 #include "lj_strfmt.h"
+#include "lj_gas.h"
 
 /* -- Buffer management --------------------------------------------------- */
 
@@ -101,6 +102,7 @@ SBuf * LJ_FASTCALL lj_buf_putstr_reverse(SBuf *sb, GCstr *s)
   MSize len = s->len;
   char *p = lj_buf_more(sb, len), *e = p+len;
   const char *q = strdata(s)+len-1;
+  lua_gasuse(mref(sb->L, lua_State), GAS_MID+GAS_FASTEST*lj_gas_strunit(len));
   while (p < e)
     *p++ = *q--;
   setsbufP(sb, p);
@@ -112,6 +114,7 @@ SBuf * LJ_FASTCALL lj_buf_putstr_lower(SBuf *sb, GCstr *s)
   MSize len = s->len;
   char *p = lj_buf_more(sb, len), *e = p+len;
   const char *q = strdata(s);
+  lua_gasuse(mref(sb->L, lua_State), GAS_MID+GAS_FASTEST*lj_gas_strunit(len));
   for (; p < e; p++, q++) {
     uint32_t c = *(unsigned char *)q;
 #if LJ_TARGET_PPC
@@ -130,6 +133,7 @@ SBuf * LJ_FASTCALL lj_buf_putstr_upper(SBuf *sb, GCstr *s)
   MSize len = s->len;
   char *p = lj_buf_more(sb, len), *e = p+len;
   const char *q = strdata(s);
+  lua_gasuse(mref(sb->L, lua_State), GAS_FAST+GAS_FASTEST*lj_gas_strunit(len));
   for (; p < e; p++, q++) {
     uint32_t c = *(unsigned char *)q;
 #if LJ_TARGET_PPC
@@ -146,9 +150,11 @@ SBuf * LJ_FASTCALL lj_buf_putstr_upper(SBuf *sb, GCstr *s)
 SBuf *lj_buf_putstr_rep(SBuf *sb, GCstr *s, int32_t rep)
 {
   MSize len = s->len;
+  lua_gasuse(mref(sb->L, lua_State), GAS_MID);
   if (rep > 0 && len) {
     uint64_t tlen = (uint64_t)rep * len;
     char *p;
+    lua_gasuse(mref(sb->L, lua_State), GAS_FASTEST*lj_gas_strunit(tlen));
     if (LJ_UNLIKELY(tlen > LJ_MAX_STR))
       lj_err_mem(sbufL(sb));
     p = lj_buf_more(sb, (MSize)tlen);

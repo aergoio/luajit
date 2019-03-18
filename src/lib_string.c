@@ -26,6 +26,7 @@
 #include "lj_char.h"
 #include "lj_strfmt.h"
 #include "lj_lib.h"
+#include "lj_gas.h"
 
 /* ------------------------------------------------------------------------ */
 
@@ -53,6 +54,7 @@ LJLIB_ASM(string_byte)		LJLIB_REC(string_range 0)
   if (start > stop) return FFH_RES(0);  /* Empty interval: return no results. */
   start--;
   n = stop - start;
+  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(n));
   if ((uint32_t)n > LUAI_MAXCSTACK)
     lj_err_caller(L, LJ_ERR_STRSLC);
   lj_state_checkstack(L, (MSize)n);
@@ -66,6 +68,7 @@ LJLIB_ASM(string_char)		LJLIB_REC(.)
 {
   int i, nargs = (int)(L->top - L->base);
   char *buf = lj_buf_tmp(L, (MSize)nargs);
+  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(nargs));
   for (i = 1; i <= nargs; i++) {
     int32_t k = lj_lib_checkint(L, i);
     if (!checku8(k))
@@ -78,9 +81,18 @@ LJLIB_ASM(string_char)		LJLIB_REC(.)
 
 LJLIB_ASM(string_sub)		LJLIB_REC(string_range 1)
 {
-  lj_lib_checkstr(L, 1);
-  lj_lib_checkint(L, 2);
+  GCstr *s = lj_lib_checkstr(L, 1);
+  int32_t i = lj_lib_checkint(L, 2);
+  int32_t n, j;
   setintV(L->base+2, lj_lib_optint(L, 3, -1));
+  j = intV(L->base+2);
+  if (j < 0)
+    j = s->len+j;
+  if (i < 0)
+    i = s->len+i;
+  n = j-i+1;
+  if (n >= 0)
+    lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(n));
   return FFH_RETRY;
 }
 
@@ -129,6 +141,7 @@ LJLIB_CF(string_dump)
   if (!isluafunc(fn) || lj_bcwrite(L, funcproto(fn), writer_buf, sb, strip))
     lj_err_caller(L, LJ_ERR_STRDUMP);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
+  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
@@ -337,6 +350,7 @@ static const char *match_capture(MatchState *ms, const char *s, int l)
 
 static const char *match(MatchState *ms, const char *s, const char *p)
 {
+  lua_gasuse(ms->L, GAS_SLOW);
   if (++ms->depth > LJ_MAX_XLEVEL)
     lj_err_caller(ms->L, LJ_ERR_STRPATX);
   init: /* using goto's to optimize tail recursion */
@@ -467,6 +481,7 @@ static int str_find_aux(lua_State *L, int find)
   if (find && ((L->base+3 < L->top && tvistruecond(L->base+3)) ||
 	       !lj_str_haspattern(p))) {  /* Search for fixed string. */
     const char *q = lj_str_find(strdata(s)+st, strdata(p), s->len-st, p->len);
+    lua_gasuse(L, GAS_MID);
     if (q) {
       setintV(L->top-2, (int32_t)(q-strdata(s)) + 1);
       setintV(L->top-1, (int32_t)(q-strdata(s)) + (int32_t)p->len);
@@ -502,11 +517,13 @@ static int str_find_aux(lua_State *L, int find)
 
 LJLIB_CF(string_find)		LJLIB_REC(.)
 {
+  lua_gasuse(L, GAS_MID);
   return str_find_aux(L, 1);
 }
 
 LJLIB_CF(string_match)
 {
+  lua_gasuse(L, GAS_MID);
   return str_find_aux(L, 0);
 }
 
@@ -541,6 +558,7 @@ LJLIB_CF(string_gmatch)
   L->top = L->base+3;
   (L->top-1)->u64 = 0;
   lj_lib_pushcc(L, lj_cf_string_gmatch_aux, FF_string_gmatch_aux, 3);
+  lua_gasuse(L, GAS_MID);
   return 1;
 }
 
@@ -608,6 +626,7 @@ LJLIB_CF(string_gsub)
   int n = 0;
   MatchState ms;
   luaL_Buffer b;
+  lua_gasuse(L, GAS_MID);
   if (!(tr == LUA_TNUMBER || tr == LUA_TSTRING ||
 	tr == LUA_TFUNCTION || tr == LUA_TTABLE))
     lj_err_arg(L, 3, LJ_ERR_NOSFT);
@@ -633,6 +652,7 @@ LJLIB_CF(string_gsub)
       break;
   }
   luaL_addlstring(&b, src, (size_t)(ms.src_end-src));
+  lua_gasuse(L, GAS_MID * b.lvl);
   luaL_pushresult(&b);
   lua_pushinteger(L, n);  /* number of substitutions */
   return 2;
@@ -666,6 +686,7 @@ LJLIB_CF(string_format)		LJLIB_REC(.)
   FormatState fs;
   SFormat sf;
   int retry = 0;
+  lua_gasuse(L, GAS_MID);
 again:
   arg = 1;
   sb = lj_buf_tmp_(L);
@@ -679,6 +700,7 @@ again:
     } else {
       if (++arg > top)
 	luaL_argerror(L, arg, lj_obj_typename[0]);
+	  lua_gasuse(L, GAS_FAST);
       switch (STRFMT_TYPE(sf)) {
       case STRFMT_INT:
 	if (tvisint(L->base+arg-1)) {

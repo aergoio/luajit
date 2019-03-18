@@ -554,6 +554,8 @@ static int pmain(lua_State *L)
   lua_register(L, "nsec", nsec);
   lua_gc(L, LUA_GCRESTART, -1);
 
+  lua_gasset(L, 6000000);
+
   createargtable(L, argv, s->argc, argn);
 
   if (!(flags & FLAGS_NOENV)) {
