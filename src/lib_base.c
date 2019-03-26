@@ -44,7 +44,7 @@
 
 LJLIB_ASM(assert)		LJLIB_REC(.)
 {
-  lua_gasuse(L, GAS_SLOW);
+  lua_gasuse(L, GAS_MID);
   lj_lib_checkany(L, 1);
   if (L->top == L->base+1)
     lj_err_caller(L, LJ_ERR_ASSERT);
@@ -70,11 +70,7 @@ LJLIB_PUSH("cdata")
 LJLIB_PUSH("table")
 LJLIB_PUSH(top-9)  /* userdata */
 LJLIB_PUSH("number")
-LJLIB_ASM(type)		LJLIB_REC(.)
-{
-  lua_gasuse(L, GAS_FAST);
-  return FFH_UNREACHABLE;
-}
+LJLIB_ASM_(type)		LJLIB_REC(.)
 /* Recycle the lj_lib_checkany(L, 1) from assert. */
 
 /* -- Base library: iterators --------------------------------------------- */
@@ -84,7 +80,7 @@ LJ_STATIC_ASSERT((int)FF_next == FF_next_N);
 
 LJLIB_ASM(next)
 {
-  lua_gasuse(L, GAS_SLOW);
+  lua_gasuse(L, GAS_MID);
   lj_lib_checktab(L, 1);
   return FFH_UNREACHABLE;
 }
@@ -113,7 +109,7 @@ static int ffh_pairs(lua_State *L, MMS mm)
 LJLIB_PUSH(lastcl)
 LJLIB_ASM(pairs)		LJLIB_REC(xpairs 0)
 {
-  lua_gasuse(L, GAS_SLOW);
+  lua_gasuse(L, GAS_MID);
   return ffh_pairs(L, MM_pairs);
 }
 
@@ -128,24 +124,20 @@ LJLIB_NOREGUV LJLIB_ASM(ipairs_aux)	LJLIB_REC(.)
 LJLIB_PUSH(lastcl)
 LJLIB_ASM(ipairs)		LJLIB_REC(xpairs 1)
 {
-  lua_gasuse(L, GAS_SLOW);
+  lua_gasuse(L, GAS_MID);
   return ffh_pairs(L, MM_ipairs);
 }
 
 /* -- Base library: getters and setters ----------------------------------- */
 
-LJLIB_ASM(getmetatable)	LJLIB_REC(.)
-{
-  lua_gasuse(L, GAS_SLOW);
-  return FFH_UNREACHABLE;
-}
+LJLIB_ASM_(getmetatable)	LJLIB_REC(.)
 /* Recycle the lj_lib_checkany(L, 1) from assert. */
 
 LJLIB_ASM(setmetatable)		LJLIB_REC(.)
 {
   GCtab *t = lj_lib_checktab(L, 1);
   GCtab *mt = lj_lib_checktabornil(L, 2);
-  lua_gasuse(L, GAS_SLOW);
+  lua_gasuse(L, GAS_MID);
   if (!tvisnil(lj_meta_lookup(L, L->base, MM_metatable)))
     lj_err_caller(L, LJ_ERR_PROTMT);
   setgcref(t->metatable, obj2gco(mt));
@@ -176,6 +168,7 @@ LJLIB_CF(setfenv)
   GCfunc *fn;
   GCtab *t = lj_lib_checktab(L, 2);
   cTValue *o = L->base;
+  lua_gasuse(L, GAS_SLOW);
   if (!(o < L->top && tvisfunc(o))) {
     int level = lj_lib_checkint(L, 1);
     if (level == 0) {
@@ -366,6 +359,7 @@ LJLIB_ASM(tostring)		LJLIB_REC(.)
 LJLIB_CF(error)
 {
   int32_t level = lj_lib_optint(L, 2, 1);
+  lua_gasuse(L, GAS_SLOW);
   lua_settop(L, 1);
   if (lua_isstring(L, 1) && level > 0) {
     luaL_where(L, level);
@@ -382,11 +376,7 @@ LJLIB_ASM(pcall)		LJLIB_REC(.)
   lj_lib_checkfunc(L, 2);  /* For xpcall only. */
   return FFH_UNREACHABLE;
 }
-LJLIB_ASM(xpcall)		LJLIB_REC(.)
-{
-  lua_gasuse(L, GAS_EXT);
-  return FFH_UNREACHABLE;
-}
+LJLIB_ASM_(xpcall)		LJLIB_REC(.)
 
 /* -- Base library: miscellaneous functions ------------------------------- */
 

@@ -165,27 +165,27 @@
   \
   /* Returns. */ \
   _(RETM,	base,	___,	lit,	___,    GAS_SLOW) \
-  _(RET,	rbase,	___,	lit,	___,    GAS_FASTEST) \
-  _(RET0,	rbase,	___,	lit,	___,    GAS_FASTEST) \
-  _(RET1,	rbase,	___,	lit,	___,    GAS_FAST) \
+  _(RET,	rbase,	___,	lit,	___,    GAS_MID) \
+  _(RET0,	rbase,	___,	lit,	___,    GAS_MID) \
+  _(RET1,	rbase,	___,	lit,	___,    GAS_MID) \
   \
   /* Loops and branches. I/J = interp/JIT, I/C/L = init/call/loop. */ \
-  _(FORI,	base,	___,	jump,	___,    GAS_FASTEST) \
-  _(JFORI,	base,	___,	jump,	___,    GAS_FASTEST) \
+  _(FORI,	base,	___,	jump,	___,    GAS_FAST) \
+  _(JFORI,	base,	___,	jump,	___,    GAS_FAST) \
   \
-  _(FORL,	base,	___,	jump,	___,    GAS_FASTEST) \
-  _(IFORL,	base,	___,	jump,	___,    GAS_FASTEST) \
-  _(JFORL,	base,	___,	lit,	___,    GAS_FASTEST) \
+  _(FORL,	base,	___,	jump,	___,    GAS_FAST) \
+  _(IFORL,	base,	___,	jump,	___,    GAS_FAST) \
+  _(JFORL,	base,	___,	lit,	___,    GAS_FAST) \
   \
-  _(ITERL,	base,	___,	jump,	___,    GAS_FASTEST) \
-  _(IITERL,	base,	___,	jump,	___,    GAS_FASTEST) \
-  _(JITERL,	base,	___,	lit,	___,    GAS_FASTEST) \
+  _(ITERL,	base,	___,	jump,	___,    GAS_FAST) \
+  _(IITERL,	base,	___,	jump,	___,    GAS_FAST) \
+  _(JITERL,	base,	___,	lit,	___,    GAS_FAST) \
   \
-  _(LOOP,	rbase,	___,	jump,	___,    GAS_FASTEST) \
-  _(ILOOP,	rbase,	___,	jump,	___,    GAS_FASTEST) \
-  _(JLOOP,	rbase,	___,	lit,	___,    GAS_FASTEST) \
+  _(LOOP,	rbase,	___,	jump,	___,    GAS_FAST) \
+  _(ILOOP,	rbase,	___,	jump,	___,    GAS_FAST) \
+  _(JLOOP,	rbase,	___,	lit,	___,    GAS_FAST) \
   \
-  _(JMP,	rbase,	___,	jump,	___,    GAS_FASTEST) \
+  _(JMP,	rbase,	___,	jump,	___,    GAS_FAST) \
   \
   /* Function headers. I/J = interp/JIT, F/V/C = fixarg/vararg/C func. */ \
   _(FUNCF,	rbase,	___,	___,	___,    GAS_ZERO) \

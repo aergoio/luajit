@@ -105,36 +105,16 @@ LJLIB_ASM(bit_lshift)		LJLIB_REC(bit_shift IR_BSHL)
   if (id2) setintV(L->base+1, sh);
   return FFH_RETRY;
 #else
-  lua_gasuse(L, GAS_FAST);
+  lua_gasuse(L, GAS_MID);
   lj_lib_checknumber(L, 1);
   bit_checkbit(L, 2);
   return FFH_RETRY;
 #endif
 }
-
-LJLIB_ASM(bit_rshift)		LJLIB_REC(bit_shift IR_BSHR)
-{
-  lua_gasuse(L, GAS_FAST);
-  return FFH_RETRY;
-}
-
-LJLIB_ASM(bit_arshift)		LJLIB_REC(bit_shift IR_BSAR)
-{
-  lua_gasuse(L, GAS_FAST);
-  return FFH_RETRY;
-}
-
-LJLIB_ASM(bit_rol)		LJLIB_REC(bit_shift IR_BROL)
-{
-  lua_gasuse(L, GAS_FAST);
-  return FFH_RETRY;
-}
-
-LJLIB_ASM(bit_ror)		LJLIB_REC(bit_shift IR_BROR)
-{
-  lua_gasuse(L, GAS_FAST);
-  return FFH_RETRY;
-}
+LJLIB_ASM_(bit_rshift)		LJLIB_REC(bit_shift IR_BSHR)
+LJLIB_ASM_(bit_arshift)		LJLIB_REC(bit_shift IR_BSAR)
+LJLIB_ASM_(bit_rol)		LJLIB_REC(bit_shift IR_BROL)
+LJLIB_ASM_(bit_ror)		LJLIB_REC(bit_shift IR_BROR)
 
 LJLIB_ASM(bit_band)		LJLIB_REC(bit_nary IR_BAND)
 {
@@ -158,26 +138,13 @@ LJLIB_ASM(bit_band)		LJLIB_REC(bit_nary IR_BAND)
   return FFH_RETRY;
 #else
   int i = 0;
-  int nargs = (int)(L->top - L->base);
-  lua_gasuse(L, GAS_FAST + GAS_FAST*nargs);
+  lua_gasuse(L, GAS_MID);
   do { lj_lib_checknumber(L, ++i); } while (L->base+i < L->top);
   return FFH_RETRY;
 #endif
 }
-
-LJLIB_ASM(bit_bor)		LJLIB_REC(bit_nary IR_BOR)
-{
-  int nargs = (int)(L->top - L->base);
-  lua_gasuse(L, GAS_FAST + GAS_FAST*nargs);
-  return FFH_RETRY;
-}
-
-LJLIB_ASM(bit_bxor)		LJLIB_REC(bit_nary IR_BXOR)
-{
-  int nargs = (int)(L->top - L->base);
-  lua_gasuse(L, GAS_FAST + GAS_FAST*nargs);
-  return FFH_RETRY;
-}
+LJLIB_ASM_(bit_bor)		LJLIB_REC(bit_nary IR_BOR)
+LJLIB_ASM_(bit_bxor)		LJLIB_REC(bit_nary IR_BXOR)
 
 /* ------------------------------------------------------------------------ */
 

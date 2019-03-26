@@ -81,18 +81,10 @@ LJLIB_ASM(string_char)		LJLIB_REC(.)
 
 LJLIB_ASM(string_sub)		LJLIB_REC(string_range 1)
 {
-  GCstr *s = lj_lib_checkstr(L, 1);
-  int32_t i = lj_lib_checkint(L, 2);
-  int32_t n, j;
+  lua_gasuse(L, GAS_MID);
+  lj_lib_checkstr(L, 1);
+  lj_lib_checkint(L, 2);
   setintV(L->base+2, lj_lib_optint(L, 3, -1));
-  j = intV(L->base+2);
-  if (j < 0)
-    j = s->len+j;
-  if (i < 0)
-    i = s->len+i;
-  n = j-i+1;
-  if (n >= 0)
-    lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(n));
   return FFH_RETRY;
 }
 
@@ -111,12 +103,14 @@ LJLIB_CF(string_rep)		LJLIB_REC(.)
   }
   sb = lj_buf_putstr_rep(sb, s, rep);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
+  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
 
 LJLIB_ASM(string_reverse)  LJLIB_REC(string_op IRCALL_lj_buf_putstr_reverse)
 {
+  lua_gasuse(L, GAS_MID);
   lj_lib_checkstr(L, 1);
   return FFH_RETRY;
 }

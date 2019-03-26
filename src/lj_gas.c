@@ -24,5 +24,5 @@ LUA_API unsigned long long lua_gasget(lua_State *L)
 
 int lj_gas_strunit(int sz)
 {
-  return (sz + 9) / 10;
+  return (sz+LJ_GAS_STRUNIT-1) / LJ_GAS_STRUNIT;
 }
