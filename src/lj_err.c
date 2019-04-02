@@ -89,7 +89,7 @@ LJ_NOINLINE static void unwindstack(lua_State *L, TValue *top)
 }
 
 /* Unwind until stop frame. Optionally cleanup frames. */
-static void *err_unwind(lua_State *L, void *stopcf, int errcode)
+static void *err_unwind(lua_State *L, void *stopcf, int cleanup, int errcode)
 {
   TValue *frame = L->base-1;
   void *cf = L->cframe;
@@ -98,7 +98,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
     if (nres < 0) {  /* C frame without Lua frame? */
       TValue *top = restorestack(L, -nres);
       if (frame < top) {  /* Frame reached? */
-	if (errcode) {
+	if (cleanup) {
 	  L->base = frame+1;
 	  L->cframe = cframe_prev(cf);
 	  unwindstack(L, top);
@@ -116,7 +116,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
     case FRAME_C:  /* C frame. */
     unwind_c:
 #if LJ_UNWIND_EXT
-      if (errcode) {
+      if (cleanup) {
 	L->base = frame_prevd(frame) + 1;
 	L->cframe = cframe_prev(cf);
 	unwindstack(L, frame - LJ_FR2);
@@ -134,14 +134,14 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
 #endif
     case FRAME_CP:  /* Protected C frame. */
       if (cframe_canyield(cf)) {  /* Resume? */
-	if (errcode) {
+	if (cleanup) {
 	  hook_leave(G(L));  /* Assumes nobody uses coroutines inside hooks. */
 	  L->cframe = NULL;
 	  L->status = (uint8_t)errcode;
 	}
 	return cf;
       }
-      if (errcode) {
+      if (cleanup) {
 	L->base = frame_prevd(frame) + 1;
 	L->cframe = cframe_prev(cf);
 	unwindstack(L, frame - LJ_FR2);
@@ -156,22 +156,26 @@ static void *err_unwind(lua_State *L, void *stopcf, int errcode)
       break;
     case FRAME_PCALL:  /* FF pcall() frame. */
     case FRAME_PCALLH:  /* FF pcall() frame inside hook. */
-      if (errcode) {
-	if (errcode == LUA_YIELD) {
-	  frame = frame_prevd(frame);
-	  break;
-	}
-	if (frame_typep(frame) == FRAME_PCALL)
-	  hook_leave(G(L));
-	L->base = frame_prevd(frame) + 1;
-	L->cframe = cf;
-	unwindstack(L, L->base);
+      if (errcode == LUA_ERRMEM) {
+        frame = frame_prevd(frame);
+        break;
       }
+      if (cleanup) {
+        if (errcode == LUA_YIELD) {
+          frame = frame_prevd(frame);
+          break;
+        }
+        if (frame_typep(frame) == FRAME_PCALL)
+          hook_leave(G(L));
+        L->base = frame_prevd(frame) + 1;
+        L->cframe = cf;
+        unwindstack(L, L->base);
+      } 
       return (void *)((intptr_t)cf | CFRAME_UNWIND_FF);
     }
   }
   /* No C frame. */
-  if (errcode) {
+  if (cleanup) {
     L->base = tvref(L->stack)+1+LJ_FR2;
     L->cframe = NULL;
     unwindstack(L, L->base);
@@ -231,14 +235,20 @@ LJ_FUNCA int lj_err_unwind_dwarf(int version, int actions,
 {
   void *cf;
   lua_State *L;
+  int errcode;
   if (version != 1)
     return _URC_FATAL_PHASE1_ERROR;
   UNUSED(uexclass);
   cf = (void *)_Unwind_GetCFA(ctx);
   L = cframe_L(cf);
+  if (LJ_UEXCLASS_CHECK(uexclass)) {
+    errcode = LJ_UEXCLASS_ERRCODE(uexclass);
+  } else {
+    errcode = LUA_ERRRUN;
+  }
   if ((actions & _UA_SEARCH_PHASE)) {
 #if LJ_UNWIND_EXT
-    if (err_unwind(L, cf, 0) == NULL)
+    if (err_unwind(L, cf, 0, errcode) == NULL)
       return _URC_CONTINUE_UNWIND;
 #endif
     if (!LJ_UEXCLASS_CHECK(uexclass)) {
@@ -247,16 +257,10 @@ LJ_FUNCA int lj_err_unwind_dwarf(int version, int actions,
     return _URC_HANDLER_FOUND;
   }
   if ((actions & _UA_CLEANUP_PHASE)) {
-    int errcode;
-    if (LJ_UEXCLASS_CHECK(uexclass)) {
-      errcode = LJ_UEXCLASS_ERRCODE(uexclass);
-    } else {
-      if ((actions & _UA_HANDLER_FRAME))
-	_Unwind_DeleteException(uex);
-      errcode = LUA_ERRRUN;
-    }
+    if (!LJ_UEXCLASS_CHECK(uexclass) && (actions & _UA_HANDLER_FRAME))
+      _Unwind_DeleteException(uex);
 #if LJ_UNWIND_EXT
-    cf = err_unwind(L, cf, errcode);
+    cf = err_unwind(L, cf, errcode, errcode);
     if ((actions & _UA_FORCE_UNWIND)) {
       return _URC_CONTINUE_UNWIND;
     } else if (cf) {
@@ -287,7 +291,7 @@ LJ_FUNCA int lj_err_unwind_dwarf(int version, int actions,
 }
 
 #if LJ_UNWIND_EXT
-#if LJ_TARGET_OSX || defined(__OpenBSD__)
+#if defined(__OpenBSD__)
 /* Sorry, no thread safety for OSX. Complain to Apple, not me. */
 static _Unwind_Exception static_uex;
 #else
@@ -355,7 +359,7 @@ LJ_FUNCA int lj_err_unwind_arm(int state, _Unwind_Control_Block *ucb,
       errcode = LUA_ERRRUN;
       setstrV(L, L->top++, lj_err_str(L, LJ_ERR_ERRCPP));
     }
-    cf = err_unwind(L, cf, errcode);
+    cf = err_unwind(L, cf, errcode, errcode);
     if ((state & _US_FORCE_UNWIND) || cf == NULL) break;
     _Unwind_SetGR(ctx, 15, (uint32_t)lj_vm_unwind_ext);
     _Unwind_SetGR(ctx, 0, (uint32_t)ucb);
@@ -453,9 +457,9 @@ LJ_FUNCA int lj_err_unwind_win(EXCEPTION_RECORD *rec,
 		LJ_EXCODE_ERRCODE(rec->ExceptionCode) : LUA_ERRRUN;
   if ((rec->ExceptionFlags & 6)) {  /* EH_UNWINDING|EH_EXIT_UNWIND */
     /* Unwind internal frames. */
-    err_unwind(L, cf, errcode);
+    err_unwind(L, cf, errcode, errcode);
   } else {
-    void *cf2 = err_unwind(L, cf, 0);
+    void *cf2 = err_unwind(L, cf, 0, errcode);
     if (cf2) {  /* We catch it, so start unwinding the upper frames. */
       if (rec->ExceptionCode == LJ_MSVC_EXCODE ||
 	  rec->ExceptionCode == LJ_GCC_EXCODE) {
@@ -526,7 +530,7 @@ LJ_NOINLINE void LJ_FASTCALL lj_err_throw(lua_State *L, int errcode)
     G(L)->panic(L);
 #else
   {
-    void *cf = err_unwind(L, NULL, errcode);
+    void *cf = err_unwind(L, NULL, errcode, errcode);
     if (cframe_unwind_ff(cf))
       lj_vm_unwind_ff(cframe_raw(cf));
     else
@@ -591,7 +595,7 @@ static ptrdiff_t finderrfunc(lua_State *L)
     case FRAME_PCALL:
     case FRAME_PCALLH:
       if (frame_func(frame_prevd(frame))->c.ffid == FF_xpcall)
-	return savestack(L, frame_prevd(frame)+1);  /* xpcall's errorfunc. */
+        return savestack(L, frame_prevd(frame)+1);  /* xpcall's errorfunc. */
       return 0;
     default:
       lua_assert(0);
