@@ -814,10 +814,10 @@ LJ_NOINLINE void lj_err_argt(lua_State *L, int narg, int tt)
 LJ_NOINLINE void lj_err_gas(lua_State *L)
 {
   if (L->status == LUA_ERRERR+1)  /* Don't touch the stack during lua_open. */
-    lj_vm_unwind_c(L->cframe, LUA_ERRRUN);
-  L->status = LUA_ERRRUN;
+    lj_vm_unwind_c(L->cframe, LUA_ERRMEM);
+  L->status = LUA_ERRRUN;         /* ugly: the marker used in gc */
   setstrV(L, L->top++, lj_err_str(L, LJ_ERR_ERRGAS));
-  lj_err_throw(L, LUA_ERRRUN);
+  lj_err_throw(L, LUA_ERRMEM);
 }
 
 /* -- Public error handling API ------------------------------------------- */
