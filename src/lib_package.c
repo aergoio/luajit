@@ -127,12 +127,14 @@ static void loaderror(lua_State *L, const char *filename)
 
 static int lj_cf_package_loader_lua(lua_State *L)
 {
+#if LJ_ENABLE_DEBUG
   const char *filename;
   const char *name = luaL_checkstring(L, 1);
   filename = findfile(L, name, "path");
   if (filename == NULL) return 1;  /* library not found in this path */
   if (luaL_loadfile(L, filename) != 0)
     loaderror(L, filename);
+#endif
   return 1;  /* library loaded successfully */
 }
 
