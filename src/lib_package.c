@@ -67,6 +67,7 @@ static void setprogdir(lua_State *L)
 
 /* ------------------------------------------------------------------------ */
 
+#if LJ_ENABLE_DEBUG
 static int readable(const char *filename)
 {
   FILE *f = fopen(filename, "r");  /* try to open file */
@@ -124,6 +125,7 @@ static void loaderror(lua_State *L, const char *filename)
   luaL_error(L, "error loading module " LUA_QS " from file " LUA_QS ":\n\t%s",
 	     lua_tostring(L, 1), filename, lua_tostring(L, -1));
 }
+#endif
 
 static int lj_cf_package_loader_lua(lua_State *L)
 {
