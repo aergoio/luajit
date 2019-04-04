@@ -17,6 +17,10 @@
 #define ABI_PROTO_FLAG_PAYABLE  0x01
 #define ABI_PROTO_FLAG_VIEW     0x02
 
+#define TYPE_NAME "_type_"
+#define TYPE_LEN "_len_"
+
+
 #define REGISTER_EXPORTED_FUNCTION(L, flag) \
   do { \
     int argc; \
@@ -78,19 +82,21 @@ static int lj_cf_abi_register_view(lua_State *L)
 static int lj_cf_abi_register_var(lua_State *L)
 {
   luaL_checkstring(L, 1);
-  luaL_checkstring(L, 2);
+  if (!lua_istable(L, 2)) {
+    luaL_error(L, "cannot load the abi module");
+  }
   if (luaL_findtable(L, LUA_ENVIRONINDEX, ABI_ENV_STATE_VARS, 0) != NULL) {
     luaL_error(L, "cannot load the abi module");
   }
-  lua_pushvalue(L, 1);  /* name type t name */
-  lua_rawget(L, -2);    /* name type t type(or nil) */
+  lua_pushvalue(L, 1);  /* name VT t name */
+  lua_rawget(L, -2);    /* name VT t table(or nil) */
   if (!lua_isnil(L, -1)) {
     luaL_error(L, "duplicated variable: " LUA_QL("%s"), lua_tostring(L, 1));
   }
-  lua_pop(L, 1);        /* name type t */
-  lua_pushvalue(L, 1);  /* name type t name */
-  lua_pushvalue(L, 2);  /* name type t name type */
-  lua_rawset(L, -3);    /* name type t */
+  lua_pop(L, 1);        /* name VT t */
+  lua_pushvalue(L, 1);  /* name VT t name */
+  lua_pushvalue(L, 2);  /* name VT t name VT */
+  lua_rawset(L, -3);    /* name VT t */
   return 0;
 }
 
@@ -216,6 +222,7 @@ static int lj_cf_abi_generate(lua_State *L)
   int has_api = 0;
   const char *name;
   const char *type;
+  int len;
 
   lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_FLAGS);
   lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_APIS);
@@ -276,7 +283,7 @@ static int lj_cf_abi_generate(lua_State *L)
   lua_concat(L, 2);                                 /* t str */
   setnilV(L->top++);                                /* t str nil */
   while (lua_next(L, -3)) {                         /* t str key val */
-    if (!tvisstr(L->top-2) || !tvisstr(L->top-1)) {
+    if (!tvisstr(L->top-2) || !tvistab(L->top-1)) {
       luaL_error(L, "invalid state variable");
     }
     if (has_api == 1) {
@@ -284,9 +291,20 @@ static int lj_cf_abi_generate(lua_State *L)
     }
     has_api = 1;
     name = strdata(strV(L->top-2));
-    type = strdata(strV(L->top-1));
-    CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
-    lua_pop(L, 1);  /* remove the value */
+	lua_pushstring(L, TYPE_NAME);                 /* t str key val _type_ */
+	lua_rawget(L, -2);                            /* t str key val "type_name" */
+	type = strdata(strV(L->top-1));	              
+	if (strcmp(type, "array") == 0) {
+		lua_pushstring(L, TYPE_LEN);     /* t str key val "type_name" _len_ */
+		lua_rawget(L, -3);			     /* t str key val "type_name" len */
+		len = intV(L->top-1);
+		lua_pop(L, 2);					/* t str key val */
+    	CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"len\":%d}", name, type, len)); /* t new_str key val*/
+	} else {
+		lua_pop(L, 1);  /* t str key val */
+    	CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
+	}
+    lua_pop(L, 1);  /* remove the value*/
   }
   lua_pushstring(L, "]}");
   lua_concat(L, 2);
