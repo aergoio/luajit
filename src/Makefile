@@ -315,7 +315,7 @@ ifeq (,$(shell $(TARGET_CC) -o /dev/null -c -x c /dev/null -fno-stack-protector 
 endif
 ifeq (Darwin,$(TARGET_SYS))
   ifeq (,$(MACOSX_DEPLOYMENT_TARGET))
-    export MACOSX_DEPLOYMENT_TARGET=10.4
+    export MACOSX_DEPLOYMENT_TARGET=10.11
   endif
   TARGET_STRIP+= -x
   TARGET_XSHLDFLAGS= -dynamiclib -single_module -undefined dynamic_lookup -fPIC
@@ -325,6 +325,7 @@ ifeq (Darwin,$(TARGET_SYS))
     TARGET_XLDFLAGS+= -pagezero_size 10000 -image_base 100000000
     TARGET_XSHLDFLAGS+= -image_base 7fff04c4a000
   endif
+  TARGET_XCFLAGS+= -mmacosx-version-min=10.11
 else
 ifeq (iOS,$(TARGET_SYS))
   TARGET_STRIP+= -x
