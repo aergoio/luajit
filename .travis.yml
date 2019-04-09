@@ -1,0 +1,10 @@
+language: c
+
+os:
+  - osx
+  
+install:
+  - make
+  
+script:
+  - luajit -e 'io.write(1+1, "\n")'
