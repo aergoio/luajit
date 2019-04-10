@@ -159,6 +159,10 @@ LUALIB_API void (luaL_pushresult) (luaL_Buffer *B);
 
 /* }====================================================== */
 
-LUALIB_API int (luaL_syserrcode) (lua_State *L);
+LUALIB_API int (luaL_hassyserror) (lua_State *L);
+LUALIB_API void (luaL_setsyserror) (lua_State *L);
+LUALIB_API int (luaL_hasuncatchablerror) (lua_State *L);
+LUALIB_API void (luaL_setuncatchablerror) (lua_State *L);
+LUALIB_API int (luaL_throwerror) (lua_State *L);
 
 #endif

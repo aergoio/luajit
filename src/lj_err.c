@@ -549,6 +549,7 @@ LJ_NOINLINE GCstr *lj_err_str(lua_State *L, ErrMsg em)
 /* Out-of-memory error. */
 LJ_NOINLINE void lj_err_mem(lua_State *L)
 {
+  lj_err_setuncatchable(L);
   if (L->status == LUA_ERRERR+1)  /* Don't touch the stack during lua_open. */
     lj_vm_unwind_c(L->cframe, LUA_ERRMEM);
   setstrV(L, L->top++, lj_err_str(L, LJ_ERR_ERRMEM));
@@ -856,3 +857,35 @@ LUALIB_API int luaL_error(lua_State *L, const char *fmt, ...)
   return 0;  /* unreachable */
 }
 
+void lj_err_setsys(lua_State *L)
+{
+  L->syserror = 1;
+  lj_err_setuncatchable(L);
+}
+
+int lj_err_hassys(lua_State *L)
+{
+  return L->syserror;
+}
+
+void lj_err_setuncatchable(lua_State *L)
+{
+  L->uncatchablerror = 1;
+}
+
+int lj_err_hasuncatchable(lua_State *L)
+{
+  return L->uncatchablerror;
+}
+
+LUALIB_API int luaL_throwerror(lua_State *L)
+{
+  if (lj_err_hasuncatchable(L)) {
+    if (L->status == LUA_ERRERR+1)  /* Don't touch the stack during lua_open. */
+      lj_vm_unwind_c(L->cframe, LUA_ERRMEM);
+    lj_err_throw(L, LUA_ERRMEM);
+  } else {
+    lua_error(L);
+  }
+  return 0;  /* unreachable */
+}
