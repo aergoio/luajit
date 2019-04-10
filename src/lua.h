@@ -47,6 +47,9 @@
 #define LUA_ERRMEM	4
 #define LUA_ERRERR	5
 
+/* system error codes */
+#define LUA_SYSERR_OUTOFMEM 1
+
 
 typedef struct lua_State lua_State;
 

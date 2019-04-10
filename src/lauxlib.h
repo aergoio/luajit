@@ -159,4 +159,6 @@ LUALIB_API void (luaL_pushresult) (luaL_Buffer *B);
 
 /* }====================================================== */
 
+LUALIB_API int (luaL_syserrcode) (lua_State *L);
+
 #endif

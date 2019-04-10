@@ -1296,3 +1296,7 @@ LUA_API void lua_setallocf(lua_State *L, lua_Alloc f, void *ud)
   g->allocf = f;
 }
 
+LUALIB_API int luaL_syserrcode(lua_State *L)
+{
+  return L->syserrcode;
+}
