@@ -621,6 +621,8 @@ typedef struct global_State {
   MRef jit_base;	/* Current JIT code L->base or NULL. */
   MRef ctype_state;	/* Pointer to C type state. */
   GCRef gcroot[GCROOT_MAX];  /* GC roots. */
+  uint8_t syserror;
+  uint8_t uncatchablerror;
 } global_State;
 
 #define mainthread(g)	(&gcref(g->mainthref)->th)
@@ -660,8 +662,6 @@ struct lua_State {
   GCRef env;		/* Thread environment (table of globals). */
   void *cframe;		/* End of C stack frame chain. */
   MSize stacksize;	/* True stack size (incl. LJ_STACK_EXTRA). */
-  uint8_t syserror;
-  uint8_t uncatchablerror;
 };
 
 #define G(L)			(mref(L->glref, global_State))

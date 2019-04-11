@@ -859,23 +859,27 @@ LUALIB_API int luaL_error(lua_State *L, const char *fmt, ...)
 
 void lj_err_setsys(lua_State *L)
 {
-  L->syserror = 1;
+  global_State *g = G(L);
+  g->syserror = 1;
   lj_err_setuncatchable(L);
 }
 
 int lj_err_hassys(lua_State *L)
 {
-  return L->syserror;
+  global_State *g = G(L);
+  return g->syserror;
 }
 
 void lj_err_setuncatchable(lua_State *L)
 {
-  L->uncatchablerror = 1;
+  global_State *g = G(L);
+  g->uncatchablerror = 1;
 }
 
 int lj_err_hasuncatchable(lua_State *L)
 {
-  return L->uncatchablerror;
+  global_State *g = G(L);
+  return g->uncatchablerror;
 }
 
 LUALIB_API int luaL_throwerror(lua_State *L)
