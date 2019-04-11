@@ -623,6 +623,7 @@ typedef struct global_State {
   GCRef gcroot[GCROOT_MAX];  /* GC roots. */
   uint8_t syserror;
   uint8_t uncatchablerror;
+  uint8_t checkmaxmem;
 } global_State;
 
 #define mainthread(g)	(&gcref(g->mainthref)->th)
