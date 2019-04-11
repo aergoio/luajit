@@ -165,4 +165,7 @@ LUALIB_API int (luaL_hasuncatchablerror) (lua_State *L);
 LUALIB_API void (luaL_setuncatchablerror) (lua_State *L);
 LUALIB_API int (luaL_throwerror) (lua_State *L);
 
+LUALIB_API int luaL_instcount(lua_State *L);
+LUALIB_API void luaL_setinstcount(lua_State *L, int count);
+
 #endif

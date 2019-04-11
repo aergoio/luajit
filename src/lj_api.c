@@ -1316,3 +1316,18 @@ LUALIB_API void luaL_setuncatchablerror (lua_State *L)
   lj_err_setuncatchable(L);
 }
 
+LUALIB_API int luaL_instcount(lua_State *L)
+{
+  global_State *g = G(L);
+  return (int)g->hookcount;
+}
+
+LUALIB_API void luaL_setinstcount(lua_State *L, int count)
+{
+  global_State *g = G(L);
+  if (count < 1)
+      g->hookcount = 1;
+  else
+      g->hookcount = (int32_t)count;
+}
+
