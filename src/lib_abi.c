@@ -54,6 +54,9 @@
       if (!lua_isfunction((L),i)) { \
         luaL_typerror((L), i, "global function"); \
       } \
+      if (!isluafunc(funcV(L->base+i-1))) { \
+        luaL_error(L, LUA_QS " is not a lua function", varname); \
+      } \
       lua_pushvalue((L), i); /* payable apis proto */ \
       lua_setfield((L), -2, varname); /* payable apis */ \
       lua_getfield((L), -2, varname); /* payable apis oldflag */ \
@@ -61,7 +64,7 @@
       if ((newflag & ABI_PROTO_FLAG_PAYABLE) && (newflag & ABI_PROTO_FLAG_VIEW)) { \
         luaL_error((L), "cannot payable for view function"); \
       } \
-      lua_pushinteger((L), (flag)|lua_tointeger(L, -1)); /* payable apis oldflag flag */ \
+      lua_pushinteger((L), newflag); /* payable apis oldflag flag */ \
       lua_setfield((L), -4, varname); /* payable apis oldflag */ \
       lua_pop((L), 1); /* payable apis */ \
     } \
@@ -91,7 +94,7 @@ static int lj_cf_abi_register_var(lua_State *L)
   lua_pushvalue(L, 1);  /* name VT t name */
   lua_rawget(L, -2);    /* name VT t table(or nil) */
   if (!lua_isnil(L, -1)) {
-    luaL_error(L, "duplicated variable: " LUA_QL("%s"), lua_tostring(L, 1));
+    luaL_error(L, "duplicated variable: " LUA_QS, lua_tostring(L, 1));
   }
   lua_pop(L, 1);        /* name VT t */
   lua_pushvalue(L, 1);  /* name VT t name */
@@ -230,13 +233,16 @@ static int lj_cf_abi_generate(lua_State *L)
     luaL_error(L, "no exported functions. you must add global function(s) to the " LUA_QL("abi.register()"));
   }
   lua_pushliteral(L, "{\"version\":\"0.2\",\"language\":\"lua\",\"functions\":[");
-  setnilV(L->top++);
+  lua_pushnil(L);
   while (lua_next(L, -3)) {
     if (!lua_isstring(L, -2) || !lua_isfunction(L, -1)) {
       luaL_error(L, "global function expected, got %s, check argument(s) in the " LUA_QL("abi.register()"), 
                  luaL_typename(L, -1));
     }
-    name = strdata(strV(L->top-2));   /* key is function name */
+    name = lua_tostring(L, -2);       /* key is function name */
+    if (!isluafunc(funcV(L->top-1))) {
+      luaL_error(L, LUA_QS " is not a lua function", name);
+    }
     pt = funcproto(funcV(L->top-1));  /* value is function prototype */
     lua_getfield(L, -5, name);
     flag = lua_tointeger(L, -1);
@@ -281,29 +287,41 @@ static int lj_cf_abi_generate(lua_State *L)
   lua_pushvalue(L, -2);                             /* t(state_vars) str(functions[{) */
   lua_pushliteral(L, "}],\"state_variables\":[");   /* t str str */
   lua_concat(L, 2);                                 /* t str */
-  setnilV(L->top++);                                /* t str nil */
+  lua_pushnil(L);
   while (lua_next(L, -3)) {                         /* t str key val */
-    if (!tvisstr(L->top-2) || !tvistab(L->top-1)) {
+    if (!lua_isstring(L, -2) || !lua_istable(L, -1)) {
       luaL_error(L, "invalid state variable");
     }
     if (has_api == 1) {
       CONCAT(lua_pushliteral(L, ","));
     }
     has_api = 1;
-    name = strdata(strV(L->top-2));
-	lua_pushstring(L, TYPE_NAME);                 /* t str key val _type_ */
-	lua_rawget(L, -2);                            /* t str key val "type_name" */
-	type = strdata(strV(L->top-1));	              
-	if (strcmp(type, "array") == 0) {
-		lua_pushstring(L, TYPE_LEN);     /* t str key val "type_name" _len_ */
-		lua_rawget(L, -3);			     /* t str key val "type_name" len */
-		len = intV(L->top-1);
-		lua_pop(L, 2);					/* t str key val */
-    	CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"len\":%d}", name, type, len)); /* t new_str key val*/
-	} else {
-		lua_pop(L, 1);  /* t str key val */
-    	CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
-	}
+    name = lua_tostring(L, -2);
+    lua_pushstring(L, TYPE_NAME);                 /* t str key val _type_ */
+    lua_rawget(L, -2);                            /* t str key val "type_name" */
+    if (!lua_isstring(L, -1)) {
+      luaL_error(L, "invalid state variable(" LUA_QS "): unknown type(" LUA_QS ")", name, lua_typename(L, lua_type(L, -1)));
+    }
+    type = lua_tostring(L, -1);
+    if (strcmp(type, "array") == 0) {
+      lua_pushstring(L, TYPE_LEN);     /* t str key val "type_name" _len_ */
+      lua_rawget(L, -3);			     /* t str key val "type_name" len */
+      if (!luaL_isinteger(L, -1)) {
+        luaL_error(L, "invalid state variable(" LUA_QS "): invalid field " LUA_QL(TYPE_LEN), name);
+      }
+      len = lua_tointeger(L, -1);
+      if (len < 0) {
+        luaL_error(L, "invalid state variable(" LUA_QS "): invalid length(%d)", name, len);
+      }
+      lua_pop(L, 2);					/* t str key val */
+      CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"len\":%d}", name, type, len)); /* t new_str key val*/
+    } else {
+      if (strcmp(type, "map") != 0 && strcmp(type, "value") != 0) {
+        luaL_error(L, "invalid state variable(" LUA_QS "): unknown type(" LUA_QS ")", name, type);
+      }
+      lua_pop(L, 1);  /* t str key val */
+      CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
+    }
     lua_pop(L, 1);  /* remove the value*/
   }
   lua_pushstring(L, "]}");
