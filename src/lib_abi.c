@@ -109,74 +109,6 @@ static int lj_cf_abi_register_payable(lua_State *L)
   return 0;
 }
 
-static int lj_cf_abi_is_payable(lua_State *L)
-{
-  const char *fname;
-  int flag;
-  fname = luaL_checkstring(L, 1);
-  lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_FLAGS);
-  if (!lua_istable(L, -1)) {
-    lua_pushinteger(L, 0);
-    return 1;
-
-  }
-  lua_getfield(L, -1, fname);
-  flag = lua_tointeger(L, -1);
-  if ((flag & ABI_PROTO_FLAG_PAYABLE) != 0) {
-      lua_pushinteger(L, 1);
-  } else {
-      lua_pushinteger(L, 0);
-  }
-  return 1;
-}
-
-static int lj_cf_abi_resolve(lua_State *L)
-{
-  int flags;
-  const char *fname;
-  fname = luaL_checkstring(L, 1);
-  lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_APIS);
-  if (!lua_istable(L, -1)) {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    return 3;
-  }
-  lua_getfield(L, -1, fname);
-  if (!lua_isfunction(L, -1)) {
-      lua_getfield(L, -2, "default");
-      if (!lua_isfunction(L, -1)) {
-        lua_pushnil(L);
-        lua_pushnil(L);
-        lua_pushnil(L);
-        return 3;
-      }
-      fname = "default";
-  }
-  lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_FLAGS);
-  if (!lua_istable(L, -1)) {
-    lua_pushstring(L, fname);
-    lua_pushinteger(L, 0);
-    lua_pushinteger(L, 0);
-    return 3;
-  }
-
-  lua_getfield(L, -1, fname);
-  flags = lua_tointeger(L, -1);
-  lua_pushstring(L, fname);
-  if ((flags & ABI_PROTO_FLAG_PAYABLE) != 0) {
-      lua_pushinteger(L, 1);
-  } else {
-      lua_pushinteger(L, 0);
-  }
-  if ((flags & ABI_PROTO_FLAG_VIEW) != 0) {
-      lua_pushinteger(L, 1);
-  } else {
-      lua_pushinteger(L, 0);
-  }
-  return 3;
-}
-
 static void autoload_function(lua_State *L, const char *fname)
 {
   /* flags abis */
@@ -359,8 +291,6 @@ static const luaL_Reg abi_lib[] = {
   {"register_view", lj_cf_abi_register_view},
   {"register_var", lj_cf_abi_register_var},
   {"payable", lj_cf_abi_register_payable},
-  {"is_payable", lj_cf_abi_is_payable},
-  {"resolve", lj_cf_abi_resolve},
   {"autoload", lj_cf_abi_autoload},
   {"generate", lj_cf_abi_generate},
   {"call", lj_cf_abi_call},
