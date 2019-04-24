@@ -421,6 +421,7 @@ LUALIB_API int lj_cf_collectgarbage(lua_State *L)
 LJLIB_PUSH(top-2)  /* Upvalue holds weak table. */
 LJLIB_CF(newproxy)
 {
+  lj_err_callermsg(L, LUA_QL("newproxy") " not supported");
   lua_settop(L, 1);
   lua_newuserdata(L, 0);
   if (lua_toboolean(L, 1) == 0) {  /* newproxy(): without metatable. */
