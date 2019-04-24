@@ -388,6 +388,7 @@ GCstr * LJ_FASTCALL lj_strfmt_obj(lua_State *L, cTValue *o)
   } else {
     char buf[8+2+2+16], *p = buf;
     p = lj_buf_wmem(p, lj_typename(o), (MSize)strlen(lj_typename(o)));
+#if 0
     *p++ = ':'; *p++ = ' ';
     if (tvisfunc(o) && isffunc(funcV(o))) {
       p = lj_buf_wmem(p, "builtin#", 8);
@@ -395,6 +396,7 @@ GCstr * LJ_FASTCALL lj_strfmt_obj(lua_State *L, cTValue *o)
     } else {
       p = lj_strfmt_wptr(p, lj_obj_ptr(o));
     }
+#endif
     return lj_str_new(L, buf, (size_t)(p - buf));
   }
 }
@@ -444,8 +446,6 @@ const char *lj_strfmt_pushvf(lua_State *L, const char *fmt, va_list argp)
       lj_buf_putb(sb, va_arg(argp, int));
       break;
     case STRFMT_PTR:
-      lj_strfmt_putptr(sb, va_arg(argp, void *));
-      break;
     case STRFMT_ERR:
     default:
       lj_buf_putb(sb, '?');
