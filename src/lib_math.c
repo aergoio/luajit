@@ -15,6 +15,7 @@
 #include "lj_obj.h"
 #include "lj_lib.h"
 #include "lj_vm.h"
+#include "lj_err.h"
 
 /* ------------------------------------------------------------------------ */
 
@@ -153,6 +154,7 @@ static void random_init(RandomState *rs, double d)
 LJLIB_PUSH(top-2)  /* Upvalue holds userdata with RandomState. */
 LJLIB_CF(math_randomseed)
 {
+  lj_err_callermsg(L, LUA_QL("math.randomseed") " not supported");
   RandomState *rs = (RandomState *)(uddata(udataV(lj_lib_upvalue(L, 1))));
   random_init(rs, lj_lib_checknum(L, 1));
   return 0;
