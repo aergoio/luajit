@@ -867,7 +867,17 @@ static void build_subroutines(BuildCtx *ctx)
   |
   |->vmeta_tsetv:
   |  movzx RCd, PC_RC			// Reload TValue *k from RC.
+  |  mov ITYPE, [BASE+RC*8]
   |  lea RC, [BASE+RC*8]
+  |  sar ITYPE, 47
+  |  cmp ITYPEd, LJ_TFALSE
+  |  je >1
+  |  cmp ITYPEd, LJ_TTRUE
+  |  je >1
+  |  cmp ITYPEd, LJ_TSTR
+  |  je >1
+  |  cmp ITYPEd, LJ_TISNUM
+  |  ja ->key_err
   |1:
   |  movzx RBd, PC_RB			// Reload TValue *t from RB.
   |  lea RB, [BASE+RB*8]
@@ -889,6 +899,13 @@ static void build_subroutines(BuildCtx *ctx)
   |  mov [RC], RB
   |->cont_nop:				// BASE = base, (RC = result)
   |  ins_next
+  |
+  |->key_err:
+  |  mov L:CARG1, SAVE_L
+  |  mov L:CARG1->base, BASE		// Caveat: CARG2/CARG3 may be BASE.
+  |  mov L:CARG1->top, BASE		// Caveat: CARG2/CARG3 may be BASE.
+  |  mov CARG2, RC
+  |  call extern lj_err_key         // (lua_State *L, TValue *k)
   |
   |3:  // Call __newindex metamethod.
   |  // BASE = base, L->top = new base, stack = cont/func/t/k/(v)

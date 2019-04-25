@@ -893,3 +893,10 @@ LUALIB_API int luaL_throwerror(lua_State *L)
   }
   return 0;  /* unreachable */
 }
+
+void lj_err_key(lua_State *L, TValue *k)
+{
+  const char *tname = lj_typename(k);
+  luaL_error(L, "cannot use " LUA_QS " as a key", tname);
+}
+
