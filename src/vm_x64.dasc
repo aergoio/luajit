@@ -870,10 +870,8 @@ static void build_subroutines(BuildCtx *ctx)
   |  mov ITYPE, [BASE+RC*8]
   |  lea RC, [BASE+RC*8]
   |  sar ITYPE, 47
-  |  cmp ITYPEd, LJ_TFALSE
-  |  je >1
   |  cmp ITYPEd, LJ_TTRUE
-  |  je >1
+  |  jae >1
   |  cmp ITYPEd, LJ_TSTR
   |  je >1
   |  cmp ITYPEd, LJ_TISNUM
