@@ -5,5 +5,6 @@
 
 LJ_FUNCA void lj_measure_start(int);
 void lj_measure_output(void);
+double lj_nanosec(void);
 
 #endif /* _LJ_MEASURE_H */

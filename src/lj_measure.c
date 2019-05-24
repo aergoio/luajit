@@ -8,7 +8,7 @@
 #include <errno.h>
 #include "lj_bc.h"
 
-double seconds(void)
+double lj_nanosec(void)
 {
 #ifdef _MSC_VER
   static LARGE_INTEGER frequency;
@@ -17,6 +17,8 @@ double seconds(void)
   LAREGE_INTEGER now;
   ::QueryPerformanceCounter(&now);
   return now.QuadPart / double(frequency.QuadPart);
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+  return 0.0;
 #else
   int rc;
   struct timespec now;
@@ -47,7 +49,7 @@ double start;
 
 void lj_measure_start(int op)
 {
-  double end = seconds();
+  double end = lj_nanosec();
   if (bOp != BC__MAX) {
     BCOpM[bOp].totalTime += (end - start);
   }
