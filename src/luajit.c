@@ -504,6 +504,12 @@ static int handle_luainit(lua_State *L)
     return dostring(L, init, "=" LUA_INIT);
 }
 
+static int nsec(lua_State *L)
+{
+    lua_pushnumber(L, luaL_nanosecond(L));
+    return 1;
+}
+
 static struct Smain {
   char **argv;
   int argc;
@@ -536,12 +542,14 @@ static int pmain(lua_State *L)
   /* Stop collector during library initialization. */
   lua_gc(L, LUA_GCSTOP, 0);
   luaL_openlibs(L);
+#if !LJ_ENABLE_DEBUG
+  luaopen_debugaux(L);
+  luaopen_debug(L);
   luaopen_io(L);
   luaopen_os(L);
   luaopen_jit(L);
-  luaopen_debug(L);
-  lua_register(L, "loadfile", lj_cf_loadfile);
-  lua_register(L, "nsec", lj_cf_nsec);
+#endif
+  lua_register(L, "nsec", nsec);
   lua_gc(L, LUA_GCRESTART, -1);
 
   createargtable(L, argv, s->argc, argn);

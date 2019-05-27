@@ -16,19 +16,20 @@
 #include "lj_arch.h"
 
 static const luaL_Reg lj_lib_load[] = {
-  { "",			luaopen_base },
+  { "",			        luaopen_base },
   { LUA_LOADLIBNAME,	luaopen_package },
-  { LUA_TABLIBNAME,	luaopen_table },
-  { LUA_STRLIBNAME,	luaopen_string },
+  { LUA_TABLIBNAME,	    luaopen_table },
+  { LUA_STRLIBNAME,	    luaopen_string },
   { LUA_MATHLIBNAME,	luaopen_math },
+  { LUA_BITLIBNAME,	    luaopen_bit },
+  { LUA_ABILIBNAME,	    luaopen_abi },
 #if LJ_ENABLE_DEBUG
-  { LUA_DBLIBNAME,  luaopen_debug },
-  { LUA_IOLIBNAME,	luaopen_io },
-  { LUA_OSLIBNAME,	luaopen_os },
-  { LUA_JITLIBNAME,	luaopen_jit },
+  { "",	                luaopen_debugaux },
+  { LUA_DBLIBNAME,      luaopen_debug },
+  { LUA_IOLIBNAME,	    luaopen_io },
+  { LUA_OSLIBNAME,	    luaopen_os },
+  { LUA_JITLIBNAME,	    luaopen_jit },
 #endif
-  { LUA_BITLIBNAME,	luaopen_bit },
-  { LUA_ABILIBNAME,	luaopen_abi },
   { NULL,		NULL }
 };
 

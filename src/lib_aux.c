@@ -21,6 +21,7 @@
 #include "lj_state.h"
 #include "lj_trace.h"
 #include "lj_lib.h"
+#include "lj_measure.h"
 
 #if LJ_TARGET_POSIX
 #include <sys/wait.h>
@@ -364,4 +365,11 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
 #endif
 
 #endif
+
+/* -- Measure ------------------------------------------------------------- */
+
+LUALIB_API lua_Number luaL_nanosecond(lua_State *L)
+{
+  return (lua_Number)lj_nanosec();
+}
 

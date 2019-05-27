@@ -156,7 +156,6 @@ LUALIB_API void (luaL_addstring) (luaL_Buffer *B, const char *s);
 LUALIB_API void (luaL_addvalue) (luaL_Buffer *B);
 LUALIB_API void (luaL_pushresult) (luaL_Buffer *B);
 
-
 /* }====================================================== */
 
 LUALIB_API int (luaL_hassyserror) (lua_State *L);
@@ -170,5 +169,8 @@ LUALIB_API void luaL_setinstcount(lua_State *L, int count);
 
 LUALIB_API void luaL_enablemaxmem(lua_State *L);
 LUALIB_API void luaL_disablemaxmem(lua_State *L);
+
+/* measure */
+LUALIB_API lua_Number (luaL_nanosecond) (lua_State *L);
 
 #endif
