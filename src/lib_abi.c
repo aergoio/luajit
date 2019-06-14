@@ -19,6 +19,7 @@
 
 #define TYPE_NAME "_type_"
 #define TYPE_LEN "_len_"
+#define TYPE_DIMENSION "_dimension_"
 
 
 #define REGISTER_EXPORTED_FUNCTION(L, flag) \
@@ -225,6 +226,7 @@ static int lj_cf_abi_generate(lua_State *L)
   int has_api = 0;
   const char *name;
   const char *type;
+  const char *dim_lens;
   int len;
 
   lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_FLAGS);
@@ -313,14 +315,34 @@ static int lj_cf_abi_generate(lua_State *L)
       if (len < 0) {
         luaL_error(L, "invalid state variable(" LUA_QS "): invalid length(%d)", name, len);
       }
+      lua_pop(L, 1);
+      lua_getfield(L, -2, TYPE_DIMENSION); /* t str key val "type_name" dim */
+      dim_lens = lua_tostring(L, -1);
+
       lua_pop(L, 2);					/* t str key val */
-      CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"len\":%d}", name, type, len)); /* t new_str key val*/
-    } else {
-      if (strcmp(type, "map") != 0 && strcmp(type, "value") != 0) {
-        luaL_error(L, "invalid state variable(" LUA_QS "): unknown type(" LUA_QS ")", name, type);
-      }
+      if (dim_lens == NULL) {
+        CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"len\":%d}", name, type, len)); /* t new_str key val*/
+	  } else {
+        CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"len\":0,\"dimension\":[%s]}", name, type, dim_lens)); /* t new_str key val*/
+	  }
+    } else if (strcmp(type, "map") == 0) {
+	  lua_getfield(L, -2, TYPE_DIMENSION); /* t str key val "type_name" dim */
+	  if (luaL_isinteger(L, -1)) {
+		int dim = lua_tointeger(L, -1);
+        lua_pop(L, 2);  /* t str key val */
+		if (dim > 1) 
+			CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\",\"dimension\":%d}", name, type, dim)); /* t new_str key val */
+		else
+        	CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
+      } else {
+        lua_pop(L, 2);  /* t str key val */
+        CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
+	  }
+	} else if (strcmp(type, "value") == 0) {
       lua_pop(L, 1);  /* t str key val */
       CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",\"type\":\"%s\"}", name, type)); /* t new_str key val */
+	} else {
+        luaL_error(L, "invalid state variable(" LUA_QS "): unknown type(" LUA_QS ")", name, type);
     }
     lua_pop(L, 1);  /* remove the value*/
   }
