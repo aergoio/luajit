@@ -37,10 +37,11 @@ LJ_FUNC_NORET void lj_err_arg(lua_State *L, int narg, ErrMsg em);
 LJ_FUNC_NORET void lj_err_argv(lua_State *L, int narg, ErrMsg em, ...);
 LJ_FUNC_NORET void lj_err_argtype(lua_State *L, int narg, const char *xname);
 LJ_FUNC_NORET void lj_err_argt(lua_State *L, int narg, int tt);
-void lj_err_key(lua_State *L, TValue *k);
 void lj_err_setsys(lua_State *L);
 int lj_err_hassys(lua_State *L);
 void lj_err_setuncatchable(lua_State *L);
 int lj_err_hasuncatchable(lua_State *L);
+void lj_err_key(lua_State *L, TValue *k);
+LJ_FUNC_NORET void lj_err_gas(lua_State *L);
 
 #endif

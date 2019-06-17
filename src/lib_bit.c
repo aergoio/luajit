@@ -23,6 +23,7 @@
 #endif
 #include "lj_ff.h"
 #include "lj_lib.h"
+#include "lj_gas.h"
 
 /* ------------------------------------------------------------------------ */
 
@@ -59,6 +60,7 @@ LJLIB_ASM(bit_tobit)		LJLIB_REC(bit_tobit)
   setintV(L->base-1-LJ_FR2, (int32_t)lj_carith_check64(L, 1, &id));
   return FFH_RES(1);
 #else
+  lua_gasuse(L, GAS_MID);
   lj_lib_checknumber(L, 1);
   return FFH_RETRY;
 #endif
@@ -71,6 +73,7 @@ LJLIB_ASM(bit_bnot)		LJLIB_REC(bit_unary IR_BNOT)
   uint64_t x = lj_carith_check64(L, 1, &id);
   return id ? bit_result64(L, id, ~x) : FFH_RETRY;
 #else
+  lua_gasuse(L, GAS_FAST);
   lj_lib_checknumber(L, 1);
   return FFH_RETRY;
 #endif
@@ -83,6 +86,7 @@ LJLIB_ASM(bit_bswap)		LJLIB_REC(bit_unary IR_BSWAP)
   uint64_t x = lj_carith_check64(L, 1, &id);
   return id ? bit_result64(L, id, lj_bswap64(x)) : FFH_RETRY;
 #else
+  lua_gasuse(L, GAS_FAST);
   lj_lib_checknumber(L, 1);
   return FFH_RETRY;
 #endif
@@ -101,6 +105,7 @@ LJLIB_ASM(bit_lshift)		LJLIB_REC(bit_shift IR_BSHL)
   if (id2) setintV(L->base+1, sh);
   return FFH_RETRY;
 #else
+  lua_gasuse(L, GAS_MID);
   lj_lib_checknumber(L, 1);
   bit_checkbit(L, 2);
   return FFH_RETRY;
@@ -133,6 +138,7 @@ LJLIB_ASM(bit_band)		LJLIB_REC(bit_nary IR_BAND)
   return FFH_RETRY;
 #else
   int i = 0;
+  lua_gasuse(L, GAS_MID);
   do { lj_lib_checknumber(L, ++i); } while (L->base+i < L->top);
   return FFH_RETRY;
 #endif
@@ -162,6 +168,7 @@ LJLIB_CF(bit_tohex)		LJLIB_REC(.)
 #else
   if (n < 8) b &= (1u << 4*n)-1;
 #endif
+  lua_gasuse(L, GAS_SLOW);
   sb = lj_strfmt_putfxint(sb, sf, b);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
   lj_gc_check(L);

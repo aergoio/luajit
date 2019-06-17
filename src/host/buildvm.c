@@ -244,7 +244,7 @@ static int build_code(BuildCtx *ctx)
 /* -- Generate VM enums --------------------------------------------------- */
 
 const char *const bc_names[] = {
-#define BCNAME(name, ma, mb, mc, mt)       #name,
+#define BCNAME(name, ma, mb, mc, mt, gas)       #name,
 BCDEF(BCNAME)
 #undef BCNAME
   NULL

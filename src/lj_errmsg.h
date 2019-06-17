@@ -183,6 +183,8 @@ ERRDEF(FFI_NYIPACKBIT,	"NYI: packed bit fields")
 ERRDEF(FFI_NYICALL,	"NYI: cannot call this C function (yet)")
 #endif
 
+ERRDEF(ERRGAS,	"not enough gas")
+
 #undef ERRDEF
 
 /* Detecting unused error messages:

@@ -20,6 +20,7 @@
 #include "lj_tab.h"
 #include "lj_ff.h"
 #include "lj_lib.h"
+#include "lj_gas.h"
 
 /* ------------------------------------------------------------------------ */
 
@@ -61,11 +62,13 @@ LJLIB_CF(table_maxn)
   Node *node;
   lua_Number m = 0;
   ptrdiff_t i;
+  lua_gasuse(L, GAS_MID);
   for (i = (ptrdiff_t)t->asize - 1; i >= 0; i--)
     if (!tvisnil(&array[i])) {
       m = (lua_Number)(int32_t)i;
       break;
     }
+  lua_gasuse(L, GAS_MID * (t->asize-m+t->hmask));
   node = noderef(t->node);
   for (i = (ptrdiff_t)t->hmask; i >= 0; i--)
     if (!tvisnil(&node[i].val) && tvisnumber(&node[i].key)) {
@@ -85,6 +88,8 @@ LJLIB_CF(table_insert)		LJLIB_REC(.)
     if (nargs != 3*sizeof(TValue))
       lj_err_caller(L, LJ_ERR_TABINS);
     /* NOBARRIER: This just moves existing elements around. */
+    n = lj_lib_checkint(L, 2);
+    lua_gasuse(L, GAS_MID*(i-n));
     for (n = lj_lib_checkint(L, 2); i > n; i--) {
       /* The set may invalidate the get pointer, so need to do it first! */
       TValue *dst = lj_tab_setint(L, t, i);
@@ -97,6 +102,7 @@ LJLIB_CF(table_insert)		LJLIB_REC(.)
     }
     i = n;
   }
+  lua_gasuse(L, GAS_MID);
   {
     TValue *dst = lj_tab_setint(L, t, i);
     copyTV(L, dst, L->top-1);  /* Set new value. */
@@ -165,6 +171,7 @@ LJLIB_CF(table_concat)		LJLIB_REC(.)
 		   lj_obj_itypename[o ? itypemap(o) : ~LJ_TNIL], idx);
   }
   setstrV(L, L->top-1, lj_buf_str(L, sbx));
+  lua_gasuse(L, GAS_MID+GAS_MID*lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
@@ -179,6 +186,7 @@ static void set2(lua_State *L, int i, int j)
 
 static int sort_comp(lua_State *L, int a, int b)
 {
+  lua_gasuse(L, GAS_SLOW);
   if (!lua_isnil(L, 2)) {  /* function? */
     int res;
     lua_pushvalue(L, 2);
@@ -260,6 +268,7 @@ LJLIB_CF(table_sort)
 {
   GCtab *t = lj_lib_checktab(L, 1);
   int32_t n = (int32_t)lj_tab_len(t);
+  lua_gasuse(L, GAS_MID);
   lua_settop(L, 2);
   if (!tvisnil(L->base+1))
     lj_lib_checkfunc(L, 2);

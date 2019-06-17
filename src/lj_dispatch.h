@@ -98,6 +98,8 @@ typedef struct GG_State {
 #endif
   ASMFunction dispatch[GG_LEN_DISP];	/* Instruction dispatch tables. */
   BCIns bcff[GG_NUM_ASMFF];		/* Bytecode for ASM fast functions. */
+  uint64_t total_gas;
+  uint16_t gas[BC__MAX];
 } GG_State;
 
 #define GG_OFS(field)	((int)offsetof(GG_State, field))
@@ -113,6 +115,8 @@ typedef struct GG_State {
 #define GG_DISP2J	(GG_OFS(J) - GG_OFS(dispatch))
 #define GG_DISP2HOT	(GG_OFS(hotcount) - GG_OFS(dispatch))
 #define GG_DISP2STATIC	(GG_LEN_DDISP*(int)sizeof(ASMFunction))
+#define GG_DISP2GAS	    (GG_OFS(gas) - GG_OFS(dispatch))
+#define GG_DISP2TGAS    (GG_OFS(total_gas) - GG_OFS(dispatch))
 
 #define hotcount_get(gg, pc) \
   (gg)->hotcount[(u32ptr(pc)>>2) & (HOTCOUNT_SIZE-1)]

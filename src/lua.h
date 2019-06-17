@@ -44,7 +44,7 @@
 #define LUA_YIELD	1
 #define LUA_ERRRUN	2
 #define LUA_ERRSYNTAX	3
-#define LUA_ERRMEM	4
+#define LUA_ERRMEM	4       /* system error */
 #define LUA_ERRERR	5
 
 
@@ -374,6 +374,23 @@ struct lua_Debug {
 
 /* }====================================================================== */
 
+/* =======================================================
+** GAS
+** =======================================================
+*/
+
+#define GAS_ZERO        0
+#define GAS_FASTEST     1
+#define GAS_FAST        2
+#define GAS_MID         3
+#define GAS_SLOW        5
+#define GAS_EXT        10
+#define GAS_MEM         3
+#define GAS_SDATA       5
+
+LUA_API void lua_gasuse(lua_State *L, int sz);
+LUA_API void lua_gasset(lua_State *L, unsigned long long sz);
+LUA_API unsigned long long lua_gasget(lua_State *L);
 
 /******************************************************************************
 * Copyright (C) 1994-2008 Lua.org, PUC-Rio.  All rights reserved.
