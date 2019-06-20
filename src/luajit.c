@@ -549,12 +549,13 @@ static int pmain(lua_State *L)
   luaopen_debug(L);
   luaopen_io(L);
   luaopen_os(L);
-  luaopen_jit(L);
+  /*luaopen_jit(L);*/
 #endif
   lua_register(L, "nsec", nsec);
   lua_gc(L, LUA_GCRESTART, -1);
 
-  lua_gasset(L, 6000000);
+#define GAS_INITSIZE 6000000
+  lua_gasset(L, GAS_INITSIZE);
 
   createargtable(L, argv, s->argc, argn);
 
@@ -585,6 +586,7 @@ static int pmain(lua_State *L)
       dofile(L, NULL);  /* Executes stdin as a file. */
     }
   }
+  printf("used gas: %llu\n", GAS_INITSIZE - lua_gasget(L));
   return 0;
 }
 
