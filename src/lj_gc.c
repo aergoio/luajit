@@ -688,6 +688,7 @@ int LJ_FASTCALL lj_gc_step(lua_State *L)
   if (g->gc.total > g->gc.threshold)
     g->gc.debt += g->gc.total - g->gc.threshold;
   do {
+    lua_gasuse(L, GAS_SLOW);
     lim -= (GCSize)gc_onestep(L);
     if (g->gc.state == GCSpause) {
       g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
@@ -810,7 +811,6 @@ void lj_gc_barriertrace(global_State *g, uint32_t traceno)
 }
 #endif
 
-#if 0
 static void lj_gc_gas(lua_State *L, GCSize osz, GCSize nsz)
 {
   global_State *g = G(L);
@@ -829,7 +829,6 @@ void lj_gc_setmax(lua_State *L)
   global_State *g = G(L);
   g->gc.max = g->gc.total;
 }
-#endif
 
 /* -- Allocator ----------------------------------------------------------- */
 
@@ -837,9 +836,6 @@ void lj_gc_setmax(lua_State *L)
 void *lj_mem_realloc(lua_State *L, void *p, GCSize osz, GCSize nsz)
 {
   global_State *g = G(L);
-  if (g->checkmaxmem && ((g->gc.total - osz) + nsz >= GCMEMMAXSIZE)) {
-    lj_err_mem(L);
-  }
   lua_assert((osz == 0) == (p == NULL));
   p = g->allocf(g->allocd, p, osz, nsz);
   if (p == NULL && nsz > 0) {
@@ -848,7 +844,7 @@ void *lj_mem_realloc(lua_State *L, void *p, GCSize osz, GCSize nsz)
   }
   lua_assert((nsz == 0) == (p == NULL));
   lua_assert(checkptrGC(p));
-  /*lj_gc_gas(L, osz, nsz);*/
+  lj_gc_gas(L, osz, nsz);
   g->gc.total = (g->gc.total - osz) + nsz;
   return p;
 }
@@ -858,16 +854,13 @@ void * LJ_FASTCALL lj_mem_newgco(lua_State *L, GCSize size)
 {
   global_State *g = G(L);
   GCobj *o;
-  if (g->checkmaxmem && (g->gc.total + size >= GCMEMMAXSIZE)) {
-    lj_err_mem(L);
-  }
   o = (GCobj *)g->allocf(g->allocd, NULL, 0, size);
   if (o == NULL) {
     lj_err_setsys(L);
     lj_err_mem(L);
   }
   lua_assert(checkptrGC(o));
-  /*lj_gc_gas(L, (GCSize)0, size);*/
+  lj_gc_gas(L, (GCSize)0, size);
   g->gc.total += size;
   setgcrefr(o->gch.nextgc, g->gc.root);
   setgcref(g->gc.root, o);

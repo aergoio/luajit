@@ -1331,18 +1331,3 @@ LUALIB_API void luaL_setinstcount(lua_State *L, int count)
       g->hookcount = (int32_t)count;
 }
 
-static void lj_setcheckmaxmem(lua_State* L, int b)
-{
-  global_State *g = G(L);
-  g->checkmaxmem = b;
-}
-
-LUALIB_API void luaL_enablemaxmem(lua_State *L)
-{
-  lj_setcheckmaxmem(L, 1);
-}
-
-LUALIB_API void luaL_disablemaxmem(lua_State *L)
-{
-  lj_setcheckmaxmem(L, 0);
-}

@@ -141,8 +141,8 @@
   /* Table ops. */ \
   _(TNEW,	dst,	___,	lit,	gc,         GAS_FAST) \
   _(TDUP,	dst,	___,	tab,	gc,         GAS_SLOW) \
-  _(GGET,	dst,	___,	str,	index,      GAS_MID) \
-  _(GSET,	var,	___,	str,	newindex,   GAS_MID) \
+  _(GGET,	dst,	___,	str,	index,      GAS_SLOW) \
+  _(GSET,	var,	___,	str,	newindex,   GAS_SLOW) \
   _(TGETV,	dst,	var,	var,	index,      GAS_FAST) \
   _(TGETS,	dst,	var,	str,	index,      GAS_FAST) \
   _(TGETB,	dst,	var,	lit,	index,      GAS_FAST) \

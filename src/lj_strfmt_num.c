@@ -266,7 +266,7 @@ static int nd_similar(uint32_t* nd, uint32_t ndhi, uint32_t* ref, MSize hilen,
 /* -- Formatted conversions to buffer ------------------------------------- */
 
 /* Write formatted floating-point number to either sb or p. */
-static char *lj_strfmt_wfnum(SBuf *sb, SFormat sf, lua_Number n, char *p)
+static char *lj_strfmt_wfnum(lua_State *L, SBuf *sb, SFormat sf, lua_Number n, char *p)
 {
   MSize width = STRFMT_WIDTH(sf), prec = STRFMT_PREC(sf), len;
   TValue t;
@@ -294,6 +294,7 @@ static char *lj_strfmt_wfnum(SBuf *sb, SFormat sf, lua_Number n, char *p)
 					       : "0123456789abcdefpx";
     int32_t e = (t.u32.hi >> 20) & 0x7ff;
     char prefix = 0, eprefix = '+';
+    lua_gasuse(L, GAS_MID);
     if (t.u32.hi & 0x80000000) prefix = '-';
     else if ((sf & STRFMT_F_PLUS)) prefix = '+';
     else if ((sf & STRFMT_F_SPACE)) prefix = ' ';
@@ -351,6 +352,7 @@ static char *lj_strfmt_wfnum(SBuf *sb, SFormat sf, lua_Number n, char *p)
     uint32_t ndhi = 0, ndlo, i;
     int32_t e = (t.u32.hi >> 20) & 0x7ff, ndebias = 0;
     char prefix = 0, *q;
+    lua_gasuse(L, GAS_SLOW);
     if (t.u32.hi & 0x80000000) prefix = '-';
     else if ((sf & STRFMT_F_PLUS)) prefix = '+';
     else if ((sf & STRFMT_F_SPACE)) prefix = ' ';
@@ -576,7 +578,7 @@ static char *lj_strfmt_wfnum(SBuf *sb, SFormat sf, lua_Number n, char *p)
 /* Add formatted floating-point number to buffer. */
 SBuf *lj_strfmt_putfnum(SBuf *sb, SFormat sf, lua_Number n)
 {
-  setsbufP(sb, lj_strfmt_wfnum(sb, sf, n, NULL));
+  setsbufP(sb, lj_strfmt_wfnum(mref(sb->L, lua_State), sb, sf, n, NULL));
   return sb;
 }
 
@@ -586,7 +588,7 @@ SBuf *lj_strfmt_putfnum(SBuf *sb, SFormat sf, lua_Number n)
 GCstr * LJ_FASTCALL lj_strfmt_num(lua_State *L, cTValue *o)
 {
   char buf[STRFMT_MAXBUF_NUM];
-  MSize len = (MSize)(lj_strfmt_wfnum(NULL, STRFMT_G14, o->n, buf) - buf);
+  MSize len = (MSize)(lj_strfmt_wfnum(L, NULL, STRFMT_G14, o->n, buf) - buf);
   return lj_str_new(L, buf, len);
 }
 

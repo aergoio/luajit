@@ -152,6 +152,7 @@ cTValue *lj_meta_tget(lua_State *L, cTValue *o, cTValue *k)
       return NULL;  /* Trigger metamethod call. */
     }
     o = mo;
+    lua_gasuse(L, GAS_FAST);
   }
   lj_err_msg(L, LJ_ERR_GETLOOP);
   return NULL;  /* unreachable */
@@ -192,6 +193,7 @@ TValue *lj_meta_tset(lua_State *L, cTValue *o, cTValue *k)
     }
     copyTV(L, &tmp, mo);
     o = &tmp;
+    lua_gasuse(L, GAS_FAST);
   }
   lj_err_msg(L, LJ_ERR_SETLOOP);
   return NULL;  /* unreachable */
@@ -216,6 +218,7 @@ TValue *lj_meta_arith(lua_State *L, TValue *ra, cTValue *rb, cTValue *rc,
   MMS mm = bcmode_mm(op);
   TValue tempb, tempc;
   cTValue *b, *c;
+  lua_gasuse(L, GAS_FAST);
   if ((b = str2num(rb, &tempb)) != NULL &&
       (c = str2num(rc, &tempc)) != NULL) {  /* Try coercion first. */
     setnumV(ra, lj_vm_foldarith(numV(b), numV(c), (int)mm-MM_add));
@@ -239,6 +242,7 @@ TValue *lj_meta_cat(lua_State *L, TValue *top, int left)
 {
   int fromc = 0;
   if (left < 0) { left = -left; fromc = 1; }
+  lua_gasuse(L, left * GAS_FAST);
   do {
     if (!(tvisstr(top) || tvisnumber(top)) ||
 	!(tvisstr(top-1) || tvisnumber(top-1))) {
@@ -310,6 +314,7 @@ TValue *lj_meta_cat(lua_State *L, TValue *top, int left)
 TValue * LJ_FASTCALL lj_meta_len(lua_State *L, cTValue *o)
 {
   cTValue *mo = lj_meta_lookup(L, o, MM_len);
+  lua_gasuse(L, GAS_FAST);
   if (tvisnil(mo)) {
     if (LJ_52 && tvistab(o))
       tabref(tabV(o)->metatable)->nomm |= (uint8_t)(1u<<MM_len);
@@ -328,6 +333,7 @@ TValue *lj_meta_equal(lua_State *L, GCobj *o1, GCobj *o2, int ne)
   if (mo) {
     TValue *top;
     uint32_t it;
+    lua_gasuse(L, GAS_FAST);
     if (tabref(o1->gch.metatable) != tabref(o2->gch.metatable)) {
       cTValue *mo2 = lj_meta_fast(L, tabref(o2->gch.metatable), MM_eq);
       if (mo2 == NULL || !lj_obj_equal(mo, mo2))
@@ -392,6 +398,7 @@ TValue *lj_meta_comp(lua_State *L, cTValue *o1, cTValue *o2, int op)
     } else {
     trymt:
       while (1) {
+    lua_gasuse(L, GAS_FAST);
 	ASMFunction cont = (op & 1) ? lj_cont_condf : lj_cont_condt;
 	MMS mm = (op & 2) ? MM_le : MM_lt;
 	cTValue *mo = lj_meta_lookup(L, o1, mm);
@@ -438,6 +445,7 @@ void lj_meta_call(lua_State *L, TValue *func, TValue *top)
 {
   cTValue *mo = lj_meta_lookup(L, func, MM_call);
   TValue *p;
+  lua_gasuse(L, GAS_FAST);
   if (!tvisfunc(mo))
     lj_err_optype_call(L, func);
   for (p = top; p > func+2*LJ_FR2; p--) copyTV(L, p, p-1);
