@@ -12,6 +12,7 @@
 #define ABI_ENV_APIS            "apis"
 #define ABI_ENV_FLAGS           "flags"
 #define ABI_ENV_STATE_VARS      "state_vars"
+#define INTERNAL_VIEW_FNS       "_view_fns"
 
 #define ABI_PROTO_FLAG_NONE     0x00
 #define ABI_PROTO_FLAG_PAYABLE  0x01
@@ -62,14 +63,34 @@
       lua_setfield((L), -2, varname); /* payable apis */ \
       lua_getfield((L), -2, varname); /* payable apis oldflag */ \
       newflag = (flag)|lua_tointeger(L, -1); \
-      if ((newflag & ABI_PROTO_FLAG_PAYABLE) && (newflag & ABI_PROTO_FLAG_VIEW)) { \
-        luaL_error((L), "cannot payable for view function"); \
+      if (newflag & ABI_PROTO_FLAG_VIEW) { \
+      	if ((newflag & ABI_PROTO_FLAG_PAYABLE)) \
+        	luaL_error((L), "cannot payable for view function"); \
+		change_view_function((L), varname); \
       } \
       lua_pushinteger((L), newflag); /* payable apis oldflag flag */ \
       lua_setfield((L), -4, varname); /* payable apis oldflag */ \
       lua_pop((L), 1); /* payable apis */ \
     } \
   } while(0)
+
+static int lj_cf_view_call(lua_State *L);
+
+void (*lj_internal_view_start)(lua_State *) = NULL;
+void (*lj_internal_view_end)(lua_State *) = NULL;
+
+static void change_view_function(lua_State *L, const char *fname) 
+{
+  if (luaL_findtable(L, LUA_ENVIRONINDEX, INTERNAL_VIEW_FNS, 5) != NULL) { /* payable apis oldflag ifns*/ 
+      luaL_error((L), "cannot load the abi module"); 
+  }
+  lua_getfield(L, -3, fname); /* payable apis oldflag ifns proto */ 
+  lua_setfield(L, -2, fname); /* payable apis oldflag ifns */
+  lua_pop(L, 1); /* payable apis oldflag */
+  lua_pushstring(L, fname);
+  lua_pushcclosure(L, lj_cf_view_call, 1);/* payable apis oldflag cfun*/
+  lua_setfield(L, LUA_GLOBALSINDEX, fname); /* payable apis oldflag */
+}
 
 static int lj_cf_abi_register(lua_State *L)
 {
@@ -374,6 +395,38 @@ static int lj_cf_abi_call(lua_State *L)
   }
   lua_call(L, argc - 1, LUA_MULTRET);
   return lua_gettop(L) - argc - 1;
+}
+
+static int lj_cf_view_call(lua_State *L)
+{
+  int argc = lua_gettop(L);
+  const char *fname;
+  int i, status;
+
+  fname = lua_tostring(L, lua_upvalueindex(1));
+
+  if (fname == NULL) {
+    luaL_error(L, "cannot find function");
+  }
+  if (luaL_findtable(L, LUA_ENVIRONINDEX, INTERNAL_VIEW_FNS, argc) != NULL) {
+      luaL_error((L), "cannot load the abi module"); 
+  } 
+  lua_getfield(L, -1, fname);
+  if (!lua_isfunction(L, -1)) {
+    luaL_error(L, "undefined function: %s", fname);
+  }
+  if (lj_internal_view_start != NULL)
+    lj_internal_view_start(L);
+  for (i = 1; i <= argc; i++) {
+    lua_pushvalue(L, i);
+  }
+  status = lua_pcall(L, argc, LUA_MULTRET, 0);
+  if (lj_internal_view_end != NULL)
+    lj_internal_view_end(L);
+  if (status != 0) {
+    lua_error(L);
+  }
+  return lua_gettop(L) - argc -1;
 }
 
 static const luaL_Reg abi_lib[] = {
