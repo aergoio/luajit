@@ -167,6 +167,9 @@ LUALIB_API int (luaL_throwerror) (lua_State *L);
 LUALIB_API int luaL_instcount(lua_State *L);
 LUALIB_API void luaL_setinstcount(lua_State *L, int count);
 
+LUALIB_API void luaL_enablemaxmem(lua_State *L);
+LUALIB_API void luaL_disablemaxmem(lua_State *L);
+
 /* measure */
 LUALIB_API lua_Number (luaL_nanosecond) (lua_State *L);
 

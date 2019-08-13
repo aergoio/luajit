@@ -836,6 +836,9 @@ void lj_gc_setmax(lua_State *L)
 void *lj_mem_realloc(lua_State *L, void *p, GCSize osz, GCSize nsz)
 {
   global_State *g = G(L);
+  if (g->checkmaxmem && ((g->gc.total - osz) + nsz >= GCMEMMAXSIZE)) {
+    lj_err_mem(L);
+  }
   lua_assert((osz == 0) == (p == NULL));
   p = g->allocf(g->allocd, p, osz, nsz);
   if (p == NULL && nsz > 0) {
@@ -854,6 +857,9 @@ void * LJ_FASTCALL lj_mem_newgco(lua_State *L, GCSize size)
 {
   global_State *g = G(L);
   GCobj *o;
+  if (g->checkmaxmem && (g->gc.total + size >= GCMEMMAXSIZE)) {
+    lj_err_mem(L);
+  }
   o = (GCobj *)g->allocf(g->allocd, NULL, 0, size);
   if (o == NULL) {
     lj_err_setsys(L);
