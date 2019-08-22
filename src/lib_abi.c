@@ -13,10 +13,12 @@
 #define ABI_ENV_FLAGS           "flags"
 #define ABI_ENV_STATE_VARS      "state_vars"
 #define INTERNAL_VIEW_FNS       "_view_fns"
+#define ABI_CHECK_FEE_DELEGATION "check_delegation"
 
 #define ABI_PROTO_FLAG_NONE     0x00
 #define ABI_PROTO_FLAG_PAYABLE  0x01
 #define ABI_PROTO_FLAG_VIEW     0x02
+#define ABI_PROTO_FLAG_FEEDELEGATION  0x04
 
 #define TYPE_NAME "_type_"
 #define TYPE_LEN "_len_"
@@ -68,6 +70,10 @@
         	luaL_error((L), "cannot payable for view function"); \
 		change_view_function((L), varname); \
       } \
+      if (strcmp(varname, ABI_CHECK_FEE_DELEGATION) == 0) { \
+		 if ((newflag & ABI_PROTO_FLAG_VIEW) == 0)  \
+        	luaL_error((L), "fee delegation check function must be view function"); \
+      } \
       lua_pushinteger((L), newflag); /* payable apis oldflag flag */ \
       lua_setfield((L), -4, varname); /* payable apis oldflag */ \
       lua_pop((L), 1); /* payable apis */ \
@@ -101,6 +107,12 @@ static int lj_cf_abi_register(lua_State *L)
 static int lj_cf_abi_register_view(lua_State *L)
 {
   REGISTER_EXPORTED_FUNCTION(L, ABI_PROTO_FLAG_VIEW);
+  return 0;
+}
+
+static int lj_cf_abi_register_fee_delegation(lua_State *L)
+{
+  REGISTER_EXPORTED_FUNCTION(L, ABI_PROTO_FLAG_FEEDELEGATION);
   return 0;
 }
 
@@ -199,7 +211,7 @@ static int lj_cf_abi_resolve(lua_State *L)
   return 3;
 }
 
-static void autoload_function(lua_State *L, const char *fname)
+static void autoload_function(lua_State *L, const char *fname, int flags)
 {
   /* flags abis */
   lua_getfield(L, -1, fname);                   /* flags abis proto */
@@ -211,7 +223,7 @@ static void autoload_function(lua_State *L, const char *fname)
   lua_getfield(L, LUA_GLOBALSINDEX, fname);     /* flags abis proto */
   if (lua_isfunction(L, -1)) {
     lua_setfield(L, -2, fname);                 /* flags abis */
-    lua_pushinteger(L, ABI_PROTO_FLAG_NONE);    /* flags abis flag */
+    lua_pushinteger(L, flags);    /* flags abis flag */
     lua_setfield(L, -3, fname);                 /* flags abis */
   } else {
     lua_pop(L, 1);
@@ -226,8 +238,9 @@ static int lj_cf_abi_autoload(lua_State *L)
   if (luaL_findtable((L), LUA_ENVIRONINDEX, ABI_ENV_APIS, 2) != NULL) {
     luaL_error((L), "cannot load the abi module");
   }
-  autoload_function(L, "constructor");
-  autoload_function(L, "default");
+  autoload_function(L, "constructor", ABI_PROTO_FLAG_NONE);
+  autoload_function(L, "default", ABI_PROTO_FLAG_NONE);
+  autoload_function(L, ABI_CHECK_FEE_DELEGATION, ABI_PROTO_FLAG_VIEW);
   lua_pop(L, 2);
   return 0;
 }
@@ -245,6 +258,8 @@ static int lj_cf_abi_generate(lua_State *L)
   GCproto *pt;
   int i, flag;
   int has_api = 0;
+  char has_check_delegation = 0;
+  char has_delegation = 0;
   const char *name;
   const char *type;
   const char *dim_lens;
@@ -275,11 +290,18 @@ static int lj_cf_abi_generate(lua_State *L)
     }
     has_api = 1;
     CONCAT(lua_pushfstring(L, "{\"name\":\"%s\",", name));
+	if (strcmp(name, ABI_CHECK_FEE_DELEGATION) == 0) {
+		has_check_delegation = 1;
+	}
     if (flag & ABI_PROTO_FLAG_VIEW) {
         CONCAT(lua_pushfstring(L, "\"view\":true,"));
     }
     if (flag & ABI_PROTO_FLAG_PAYABLE) {
         CONCAT(lua_pushfstring(L, "\"payable\":true,"));
+    }
+    if (flag & ABI_PROTO_FLAG_FEEDELEGATION) {
+        CONCAT(lua_pushfstring(L, "\"fee_delegation\":true,"));
+		has_delegation = 1;
     }
     CONCAT(lua_pushfstring(L, "\"arguments\":["));
     for (i = 1; i <= pt->numparams; i++) {
@@ -298,6 +320,9 @@ static int lj_cf_abi_generate(lua_State *L)
   }
   if (has_api == 0) {
     luaL_error(L, "no exported functions. you must add global function(s) to the " LUA_QL("abi.register()"));
+  }
+  if (has_delegation && has_check_delegation == 0) {
+    luaL_error(L, "no " LUA_QL(ABI_CHECK_FEE_DELEGATION) " function. you must add global function(s) to the " LUA_QL(ABI_CHECK_FEE_DELEGATION) " with fee_delegation");
   }
   lua_getfield(L, LUA_ENVIRONINDEX, ABI_ENV_STATE_VARS);
   if (lua_isnil(L, -1)) {
@@ -433,6 +458,7 @@ static const luaL_Reg abi_lib[] = {
   {"register", lj_cf_abi_register},
   {"register_view", lj_cf_abi_register_view},
   {"register_var", lj_cf_abi_register_var},
+  {"fee_delegation", lj_cf_abi_register_fee_delegation},
   {"payable", lj_cf_abi_register_payable},
   {"is_payable", lj_cf_abi_is_payable},
   {"resolve", lj_cf_abi_resolve},
