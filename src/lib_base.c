@@ -44,14 +44,14 @@
 
 LJLIB_ASM(assert)		LJLIB_REC(.)
 {
+  GCstr *s;
   lua_gasuse(L, GAS_MID);
   lj_lib_checkany(L, 1);
-  if (L->top == L->base+1)
-    lj_err_caller(L, LJ_ERR_ASSERT);
-  else if (tvisstr(L->base+1) || tvisnumber(L->base+1))
-    lj_err_callermsg(L, strdata(lj_lib_checkstr(L, 2)));
+  s = lj_lib_optstr(L, 2);
+  if (s)
+    lj_err_callermsg(L, strdata(s));
   else
-    lj_err_run(L);
+    lj_err_caller(L, LJ_ERR_ASSERT);
   return FFH_UNREACHABLE;
 }
 
