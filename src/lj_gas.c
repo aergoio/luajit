@@ -2,7 +2,7 @@
 #include "lj_err.h"
 #include "lj_dispatch.h"
 
-LUA_API void lua_gasuse(lua_State *L, int sz)
+LUA_API void lua_gasuse(lua_State *L, unsigned long long sz)
 {        
   if (L2GG(L)->total_gas == 0)
     return;
