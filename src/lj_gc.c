@@ -823,13 +823,6 @@ static void lj_gc_gas(lua_State *L, GCSize osz, GCSize nsz)
   }
 }
 
-/* TODO aergo extention module 까지 오픈하고 total_gas 와 max 설정 */
-void lj_gc_setmax(lua_State *L)
-{
-  global_State *g = G(L);
-  g->gc.max = g->gc.total;
-}
-
 /* -- Allocator ----------------------------------------------------------- */
 
 /* Call pluggable memory allocator to allocate or resize a fragment. */
