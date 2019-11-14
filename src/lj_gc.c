@@ -818,7 +818,7 @@ static void lj_gc_gas(lua_State *L, GCSize osz, GCSize nsz)
   if (ntsz > g->gc.max) {
     GCSize d = ntsz - g->gc.max;
     if (L->status == LUA_OK)
-        lua_gasuse(L, d * GAS_MEM);
+        lua_gasuse_mul(L, GAS_MEM, d);
     g->gc.max = ntsz;
   }
 }

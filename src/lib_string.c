@@ -54,7 +54,8 @@ LJLIB_ASM(string_byte)		LJLIB_REC(string_range 0)
   if (start > stop) return FFH_RES(0);  /* Empty interval: return no results. */
   start--;
   n = stop - start;
-  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(n));
+  lua_gasuse(L, GAS_MID);
+  lua_gasuse_mul(L, GAS_FASTEST, lj_gas_strunit(n));
   if ((uint32_t)n > LUAI_MAXCSTACK)
     lj_err_caller(L, LJ_ERR_STRSLC);
   lj_state_checkstack(L, (MSize)n);
@@ -68,7 +69,8 @@ LJLIB_ASM(string_char)		LJLIB_REC(.)
 {
   int i, nargs = (int)(L->top - L->base);
   char *buf = lj_buf_tmp(L, (MSize)nargs);
-  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(nargs));
+  lua_gasuse(L, GAS_MID);
+  lua_gasuse_mul(L, GAS_FASTEST, lj_gas_strunit(nargs));
   for (i = 1; i <= nargs; i++) {
     int32_t k = lj_lib_checkint(L, i);
     if (!checku8(k))
@@ -94,6 +96,7 @@ LJLIB_CF(string_rep)		LJLIB_REC(.)
   int32_t rep = lj_lib_checkint(L, 2);
   GCstr *sep = lj_lib_optstr(L, 3);
   SBuf *sb = lj_buf_tmp_(L);
+  lua_gasuse(L, GAS_MID);
   if (sep && rep > 1) {
     GCstr *s2 = lj_buf_cat2str(L, sep, s);
     lj_buf_reset(sb);
@@ -103,7 +106,7 @@ LJLIB_CF(string_rep)		LJLIB_REC(.)
   }
   sb = lj_buf_putstr_rep(sb, s, rep);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
-  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(strV(L->top-1)->len));
+  lua_gasuse_mul(L, GAS_FASTEST, lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
@@ -132,10 +135,11 @@ LJLIB_CF(string_dump)
   int strip = L->base+1 < L->top && tvistruecond(L->base+1);
   SBuf *sb = lj_buf_tmp_(L);  /* Assumes lj_bcwrite() doesn't use tmpbuf. */
   L->top = L->base+1;
+  lua_gasuse(L, GAS_MID);
   if (!isluafunc(fn) || lj_bcwrite(L, funcproto(fn), writer_buf, sb, strip))
     lj_err_caller(L, LJ_ERR_STRDUMP);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
-  lua_gasuse(L, GAS_MID+GAS_FASTEST*lj_gas_strunit(strV(L->top-1)->len));
+  lua_gasuse_mul(L, GAS_FASTEST, lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
@@ -646,7 +650,7 @@ LJLIB_CF(string_gsub)
       break;
   }
   luaL_addlstring(&b, src, (size_t)(ms.src_end-src));
-  lua_gasuse(L, GAS_MID * b.lvl);
+  lua_gasuse_mul(L, GAS_MID, b.lvl);
   luaL_pushresult(&b);
   lua_pushinteger(L, n);  /* number of substitutions */
   return 2;

@@ -68,7 +68,7 @@ LJLIB_CF(table_maxn)
       m = (lua_Number)(int32_t)i;
       break;
     }
-  lua_gasuse(L, GAS_MID * (t->asize-m+t->hmask));
+  lua_gasuse_mul(L, GAS_MID, (t->asize-m) + t->hmask);
   node = noderef(t->node);
   for (i = (ptrdiff_t)t->hmask; i >= 0; i--)
     if (!tvisnil(&node[i].val) && tvisnumber(&node[i].key)) {
@@ -89,7 +89,7 @@ LJLIB_CF(table_insert)		LJLIB_REC(.)
       lj_err_caller(L, LJ_ERR_TABINS);
     /* NOBARRIER: This just moves existing elements around. */
     n = lj_lib_checkint(L, 2);
-    lua_gasuse(L, GAS_MID*(i-n));
+    lua_gasuse_mul(L, GAS_MID, i-n);
     for (n = lj_lib_checkint(L, 2); i > n; i--) {
       /* The set may invalidate the get pointer, so need to do it first! */
       TValue *dst = lj_tab_setint(L, t, i);
@@ -164,6 +164,7 @@ LJLIB_CF(table_concat)		LJLIB_REC(.)
 	      lj_lib_checkint(L, 4) : (int32_t)lj_tab_len(t);
   SBuf *sb = lj_buf_tmp_(L);
   SBuf *sbx = lj_buf_puttab(sb, t, sep, i, e);
+  lua_gasuse(L, GAS_MID);
   if (LJ_UNLIKELY(!sbx)) {  /* Error: bad element type. */
     int32_t idx = (int32_t)(intptr_t)sbufP(sb);
     cTValue *o = lj_tab_getint(t, idx);
@@ -171,7 +172,7 @@ LJLIB_CF(table_concat)		LJLIB_REC(.)
 		   lj_obj_itypename[o ? itypemap(o) : ~LJ_TNIL], idx);
   }
   setstrV(L, L->top-1, lj_buf_str(L, sbx));
-  lua_gasuse(L, GAS_MID+GAS_MID*lj_gas_strunit(strV(L->top-1)->len));
+  lua_gasuse_mul(L, GAS_MID, lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }

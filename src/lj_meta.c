@@ -242,7 +242,7 @@ TValue *lj_meta_cat(lua_State *L, TValue *top, int left)
 {
   int fromc = 0;
   if (left < 0) { left = -left; fromc = 1; }
-  lua_gasuse(L, left * GAS_FAST);
+  lua_gasuse_mul(L, GAS_FAST, left);
   do {
     if (!(tvisstr(top) || tvisnumber(top)) ||
 	!(tvisstr(top-1) || tvisnumber(top-1))) {

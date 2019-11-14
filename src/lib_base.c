@@ -239,7 +239,8 @@ LJLIB_CF(unpack)
 	      lj_lib_checkint(L, 3) : (int32_t)lj_tab_len(t);
   if (i > e) return 0;
   n = e - i + 1;
-  lua_gasuse(L, GAS_MID + GAS_FAST * n);
+  lua_gasuse(L, GAS_MID);
+  lua_gasuse_mul(L, GAS_FAST, n);
   if (n <= 0 || !lua_checkstack(L, n))
     lj_err_caller(L, LJ_ERR_UNPACK);
   do {
