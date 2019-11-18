@@ -392,6 +392,7 @@ LUA_API void lua_gasuse(lua_State *L, unsigned long long sz);
 LUA_API void lua_gasuse_mul(lua_State *L, unsigned long long sz, unsigned long long n);
 LUA_API void lua_gasset(lua_State *L, unsigned long long sz);
 LUA_API unsigned long long lua_gasget(lua_State *L);
+LUA_API unsigned char lua_setusegas(lua_State *L, unsigned char use);
 
 /******************************************************************************
 * Copyright (C) 1994-2008 Lua.org, PUC-Rio.  All rights reserved.
