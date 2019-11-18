@@ -118,6 +118,7 @@ typedef struct GG_State {
 #define GG_DISP2STATIC	(GG_LEN_DDISP*(int)sizeof(ASMFunction))
 #define GG_DISP2GAS	    (GG_OFS(gas) - GG_OFS(dispatch))
 #define GG_DISP2TGAS    (GG_OFS(total_gas) - GG_OFS(dispatch))
+#define GG_DISP2UGAS    (GG_OFS(use_gas) - GG_OFS(dispatch))
 
 #define hotcount_get(gg, pc) \
   (gg)->hotcount[(u32ptr(pc)>>2) & (HOTCOUNT_SIZE-1)]
