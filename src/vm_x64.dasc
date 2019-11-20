@@ -200,7 +200,7 @@
 |
 |// Caveat: uses label 8 and 9.
 |.macro ff_gasuse, amount
-|  cmp byte [DISPATCH+GG_DISP2UGAS], 0
+|  cmp byte [DISPATCH+GG_DISP2EGAS], 0
 |  je >9
 |  cmp qword [DISPATCH+GG_DISP2TGAS], amount
 |  jae >8
@@ -225,7 +225,7 @@
 |  pop RC
 |  pop RA
 |.else
-|  cmp byte [DISPATCH+GG_DISP2UGAS], 0
+|  cmp byte [DISPATCH+GG_DISP2EGAS], 0
 |  je >2
 |  movzx TMPR, word [DISPATCH+OP*2+GG_DISP2GAS]
 |  cmp qword [DISPATCH+GG_DISP2TGAS], TMPR

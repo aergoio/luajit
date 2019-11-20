@@ -170,6 +170,18 @@ LUALIB_API void luaL_setinstcount(lua_State *L, int count);
 LUALIB_API void luaL_enablemaxmem(lua_State *L);
 LUALIB_API void luaL_disablemaxmem(lua_State *L);
 
+LUALIB_API void luaL_set_service(lua_State *L, int service);
+LUALIB_API int luaL_service(lua_State *L);
+
+LUALIB_API void luaL_set_hardforkversion(lua_State *L, int version);
+LUALIB_API int luaL_hardforkversion(lua_State *L);
+
+LUALIB_API void luaL_set_tminstcount(lua_State *L, int count);
+LUALIB_API int luaL_tminstcount(lua_State *L);
+
+LUALIB_API void luaL_set_tminstlimit(lua_State *L, int limit);
+LUALIB_API int luaL_tminstlimit(lua_State *L);
+
 /* measure */
 LUALIB_API lua_Number (luaL_nanosecond) (lua_State *L);
 

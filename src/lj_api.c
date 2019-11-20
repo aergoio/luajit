@@ -1346,3 +1346,44 @@ LUALIB_API void luaL_disablemaxmem(lua_State *L)
 {
   lj_setcheckmaxmem(L, 0);
 }
+
+LUALIB_API void luaL_set_service(lua_State *L, int service)
+{
+  G(L)->service = service;
+}
+
+LUALIB_API int luaL_service(lua_State *L)
+{
+  return G(L)->service;
+}
+
+LUALIB_API void luaL_set_hardforkversion(lua_State *L, int version)
+{
+  G(L)->hardfork_version = version;
+}
+
+LUALIB_API int luaL_hardforkversion(lua_State *L)
+{
+  return G(L)->hardfork_version;
+}
+
+LUALIB_API void luaL_set_tminstcount(lua_State *L, int count)
+{
+  G(L)->inst_count = count;
+}
+
+LUALIB_API int luaL_tminstcount(lua_State *L)
+{
+  return G(L)->inst_count;
+}
+
+LUALIB_API void luaL_set_tminstlimit(lua_State *L, int limit)
+{
+  G(L)->inst_limit = limit;
+}
+
+LUALIB_API int luaL_tminstlimit(lua_State *L)
+{
+  return G(L)->inst_limit;
+}
+
