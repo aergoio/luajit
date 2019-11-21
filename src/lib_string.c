@@ -83,7 +83,6 @@ LJLIB_ASM(string_char)		LJLIB_REC(.)
 
 LJLIB_ASM(string_sub)		LJLIB_REC(string_range 1)
 {
-  lua_gasuse(L, GAS_MID);
   lj_lib_checkstr(L, 1);
   lj_lib_checkint(L, 2);
   setintV(L->base+2, lj_lib_optint(L, 3, -1));
@@ -106,14 +105,12 @@ LJLIB_CF(string_rep)		LJLIB_REC(.)
   }
   sb = lj_buf_putstr_rep(sb, s, rep);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
-  lua_gasuse_mul(L, GAS_FASTEST, lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
 
 LJLIB_ASM(string_reverse)  LJLIB_REC(string_op IRCALL_lj_buf_putstr_reverse)
 {
-  lua_gasuse(L, GAS_MID);
   lj_lib_checkstr(L, 1);
   return FFH_RETRY;
 }
@@ -135,11 +132,10 @@ LJLIB_CF(string_dump)
   int strip = L->base+1 < L->top && tvistruecond(L->base+1);
   SBuf *sb = lj_buf_tmp_(L);  /* Assumes lj_bcwrite() doesn't use tmpbuf. */
   L->top = L->base+1;
-  lua_gasuse(L, GAS_MID);
+  lua_gasuse(L, GAS_EXT);
   if (!isluafunc(fn) || lj_bcwrite(L, funcproto(fn), writer_buf, sb, strip))
     lj_err_caller(L, LJ_ERR_STRDUMP);
   setstrV(L, L->top-1, lj_buf_str(L, sb));
-  lua_gasuse_mul(L, GAS_FASTEST, lj_gas_strunit(strV(L->top-1)->len));
   lj_gc_check(L);
   return 1;
 }
@@ -555,8 +551,8 @@ LJLIB_CF(string_gmatch)
   lj_lib_checkstr(L, 2);
   L->top = L->base+3;
   (L->top-1)->u64 = 0;
-  lj_lib_pushcc(L, lj_cf_string_gmatch_aux, FF_string_gmatch_aux, 3);
   lua_gasuse(L, GAS_MID);
+  lj_lib_pushcc(L, lj_cf_string_gmatch_aux, FF_string_gmatch_aux, 3);
   return 1;
 }
 

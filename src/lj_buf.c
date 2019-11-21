@@ -135,7 +135,7 @@ SBuf * LJ_FASTCALL lj_buf_putstr_upper(SBuf *sb, GCstr *s)
   MSize len = s->len;
   char *p = lj_buf_more(sb, len), *e = p+len;
   const char *q = strdata(s);
-  lua_gasuse(mref(sb->L, lua_State), GAS_FAST);
+  lua_gasuse(mref(sb->L, lua_State), GAS_MID);
   lua_gasuse_mul(mref(sb->L, lua_State), GAS_FASTEST, lj_gas_strunit(len));
   for (; p < e; p++, q++) {
     uint32_t c = *(unsigned char *)q;
@@ -157,7 +157,7 @@ SBuf *lj_buf_putstr_rep(SBuf *sb, GCstr *s, int32_t rep)
   if (rep > 0 && len) {
     uint64_t tlen = (uint64_t)rep * len;
     char *p;
-    lua_gasuse_mul(mref(sb->L, lua_State), GAS_FASTEST, lj_gas_strunit(tlen));
+    lua_gasuse_mul(mref(sb->L, lua_State), GAS_FAST, rep);
     if (LJ_UNLIKELY(tlen > LJ_MAX_STR))
       lj_err_mem(sbufL(sb));
     p = lj_buf_more(sb, (MSize)tlen);
@@ -183,6 +183,7 @@ SBuf *lj_buf_puttab(SBuf *sb, GCtab *t, GCstr *sep, int32_t i, int32_t e)
     for (;;) {
       cTValue *o = lj_tab_getint(t, i);
       char *p;
+      lua_gasuse(mref(sb->L, lua_State), GAS_MID);
       if (!o) {
       badtype:  /* Error: bad element type. */
 	setsbufP(sb, (void *)(intptr_t)i);  /* Store failing index. */

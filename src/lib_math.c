@@ -23,7 +23,6 @@
 
 LJLIB_ASM(math_abs)		LJLIB_REC(.)
 {
-  lua_gasuse(L, GAS_MID);
   lj_lib_checknumber(L, 1);
   return FFH_RETRY;
 }
@@ -40,7 +39,6 @@ LJLIB_ASM(math_pow)		LJLIB_REC(.)
 LJLIB_ASM(math_min)		LJLIB_REC(math_minmax IR_MIN)
 {
   int i = 0;
-  lua_gasuse(L, GAS_MID);
   do {
       lj_lib_checknumber(L, ++i);
   } while (L->base+i < L->top);
