@@ -2070,7 +2070,7 @@ static void build_subroutines(BuildCtx *ctx)
   |  add TMPRd, 1
   |4:
   |  mov CARG1, rax         // backup
-  |  mov CARG2, rdx
+  |  mov CARG4, rdx
   |  mov eax, LJ_GAS_STRUNIT
   |  sub eax, 1
   |  add eax, TMPRd
@@ -2081,7 +2081,7 @@ static void build_subroutines(BuildCtx *ctx)
   |  mul RBd
   |  ff_gasuse rax          // Caveat: uses label 8 and 9.
   |  mov rax, CARG1         // restore
-  |  mov rdx, CARG2
+  |  mov rdx, CARG4
   |  jmp ->fff_newstr
   |
   |5:  // Negative end or overflow.
