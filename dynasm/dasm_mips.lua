@@ -11,9 +11,9 @@ local mips64 = mips64
 local _info = {
   arch =	mips64 and "mips64" or "mips",
   description =	"DynASM MIPS32/MIPS64 module",
-  version =	"1.4.0",
-  vernum =	 10400,
-  release =	"2016-05-24",
+  version =	"1.5.0",
+  vernum =	 10500,
+  release =	"2021-05-02",
   author =	"Mike Pall",
   license =	"MIT",
 }
