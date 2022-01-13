@@ -507,6 +507,9 @@ StrScanFmt lj_strscan_scan(const uint8_t *p, MSize len, TValue *o,
       } else if (x == 0 && neg) {
 	o->n = -0.0;
 	return STRSCAN_NUM;
+      } else if (x == 0 && neg) {
+	o->n = -0.0;
+	return STRSCAN_NUM;
       } else {
 	o->i = neg ? (int32_t)(~x+1u) : (int32_t)x;
 	return STRSCAN_INT;
