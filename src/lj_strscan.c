@@ -501,6 +501,9 @@ StrScanFmt lj_strscan_scan(const uint8_t *p, MSize len, TValue *o,
       if ((opt & STRSCAN_OPT_TONUM)) {
 	o->n = (double)y;
 	return STRSCAN_NUM;
+      } else if (x == 0 && neg) {
+	o->n = -0.0;
+	return STRSCAN_NUM;
       } else {
 	o->i = neg ? (int32_t)(~x+1u) : (int32_t)x;
 	return STRSCAN_INT;
@@ -518,7 +521,7 @@ StrScanFmt lj_strscan_scan(const uint8_t *p, MSize len, TValue *o,
       fmt = strscan_dec(sp, o, fmt, opt, ex, neg, dig);
 
     /* Try to convert number to integer, if requested. */
-    if (fmt == STRSCAN_NUM && (opt & STRSCAN_OPT_TOINT)) {
+    if (fmt == STRSCAN_NUM && (opt & STRSCAN_OPT_TOINT) && !tvismzero(o)) {
       double n = o->n;
       int32_t i = lj_num2int(n);
       if (n == (lua_Number)i) { o->i = i; return STRSCAN_INT; }
