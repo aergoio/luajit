@@ -43,42 +43,47 @@ extern double __divdf3(double a, double b);
 #else
 #define FFIGOTDEF(_)
 #endif
-#define GOTDEF(_)                                                                                       \
-  _(floor)                                                                                              \
-  _(ceil)                                                                                               \
-  _(trunc)                                                                                              \
-  _(log)                                                                                                \
-  _(log10)                                                                                              \
-  _(exp)                                                                                                \
-  _(sin)                                                                                                \
-  _(cos)                                                                                                \
-  _(tan)                                                                                                \
-  _(asin)                                                                                               \
-  _(acos)                                                                                               \
-  _(atan)                                                                                               \
-  _(sinh)                                                                                               \
-  _(cosh)                                                                                               \
-  _(tanh)                                                                                               \
-  _(frexp)                                                                                              \
-  _(modf)                                                                                               \
-  _(atan2)                                                                                              \
-  _(pow)                                                                                                \
-  _(fmod)                                                                                               \
-  _(ldexp)                                                                                              \
-  _(lj_vm_modi)                                                                                         \
-  _(lj_dispatch_call)                                                                                   \
-  _(lj_dispatch_ins) _(lj_dispatch_stitch)                                                              \
-      _(lj_dispatch_profile) _(lj_err_throw)                                                            \
-          _(lj_ffh_coroutine_wrap_err) _(lj_func_closeuv) _(lj_func_newL_gc)                            \
-              _(lj_gc_barrieruv) _(lj_gc_step) _(lj_gc_step_fixtop) _(lj_meta_arith)                    \
-                  _(lj_meta_call) _(lj_meta_cat) _(lj_meta_comp) _(lj_meta_equal)                       \
-                      _(lj_meta_for) _(lj_meta_istype) _(lj_meta_len) _(lj_meta_tget)                   \
-                          _(lj_meta_tset) _(lj_state_growstack) _(lj_strfmt_number)                     \
-                              _(lj_str_new) _(lj_tab_dup) _(lj_tab_get) _(lj_tab_getinth) _(lj_tab_len) \
-                                  _(lj_tab_new) _(lj_tab_newkey) _(lj_tab_next) _(lj_tab_reasize)       \
-                                      _(lj_tab_setinth) _(lj_buf_putstr_reverse) _(lj_buf_putstr_lower) \
-                                          _(lj_buf_putstr_upper) _(lj_buf_tostr)                        \
-                                              JITGOTDEF(_) FFIGOTDEF(_) SFGOTDEF(_)
+#define GOTDEF(_)                                                                           \
+  _(floor)                                                                                  \
+  _(ceil)                                                                                   \
+  _(trunc)                                                                                  \
+  _(log)                                                                                    \
+  _(log10)                                                                                  \
+  _(exp)                                                                                    \
+  _(sin)                                                                                    \
+  _(cos)                                                                                    \
+  _(tan)                                                                                    \
+  _(asin)                                                                                   \
+  _(acos)                                                                                   \
+  _(atan)                                                                                   \
+  _(sinh)                                                                                   \
+  _(cosh)                                                                                   \
+  _(tanh)                                                                                   \
+  _(frexp)                                                                                  \
+  _(modf)                                                                                   \
+  _(atan2)                                                                                  \
+  _(pow)                                                                                    \
+  _(fmod)                                                                                   \
+  _(ldexp)                                                                                  \
+  _(lj_vm_modi)                                                                             \
+  _(lj_dispatch_call)                                                                       \
+  _(lj_dispatch_ins)                                                                        \
+  _(lj_dispatch_stitch)                                                                     \
+  _(lj_dispatch_profile)                                                                    \
+  _(lj_err_throw)                                                                           \
+  _(lj_ffh_coroutine_wrap_err)                                                              \
+  _(lj_func_closeuv)                                                                        \
+  _(lj_func_newL_gc)                                                                        \
+  _(lj_gc_barrieruv)                                                                        \
+  _(lj_gc_step) _(lj_gc_step_fixtop) _(lj_meta_arith)                                       \
+      _(lj_meta_call) _(lj_meta_cat) _(lj_meta_comp) _(lj_meta_equal)                       \
+          _(lj_meta_for) _(lj_meta_istype) _(lj_meta_len) _(lj_meta_tget)                   \
+              _(lj_meta_tset) _(lj_state_growstack) _(lj_strfmt_number)                     \
+                  _(lj_str_new) _(lj_tab_dup) _(lj_tab_get) _(lj_tab_getinth) _(lj_tab_len) \
+                      _(lj_tab_new) _(lj_tab_newkey) _(lj_tab_next) _(lj_tab_reasize)       \
+                          _(lj_tab_setinth) _(lj_buf_putstr_reverse) _(lj_buf_putstr_lower) \
+                              _(lj_buf_putstr_upper) _(lj_buf_tostr)                        \
+                                  JITGOTDEF(_) FFIGOTDEF(_) SFGOTDEF(_)
 
 enum
 {

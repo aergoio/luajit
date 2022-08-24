@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include "lj_obj.h"
 #include "lj_err.h"
 #include "lj_dispatch.h"
@@ -20,13 +21,16 @@ static unsigned long long lj_gas_mul_no_ovt(unsigned long long a, unsigned long 
 LUA_API void lua_gasuse(lua_State *L, unsigned long long sz)
 {
   GG_State *gg = L2GG(L);
+  pthread_mutex_lock(&gg->gas_lock);
   if (gg->enable_gas == 0)
+  {
+    pthread_mutex_unlock(&gg->gas_lock);
     return;
+  }
   if (gg->total_gas < sz)
   {
     lj_err_gas(L);
   }
-  pthread_mutex_lock(&gg->gas_lock);
   gg->total_gas -= sz;
   pthread_mutex_unlock(&gg->gas_lock);
 }
@@ -38,12 +42,18 @@ LUA_API void lua_gasuse_mul(lua_State *L, unsigned long long sz, unsigned long l
 
 LUA_API void lua_enablegas(lua_State *L)
 {
-  L2GG(L)->enable_gas = 1;
+  GG_State *gg = L2GG(L);
+  pthread_mutex_lock(&gg->gas_lock);
+  gg->enable_gas = 1;
+  pthread_mutex_unlock(&gg->gas_lock);
 }
 
 LUA_API void lua_disablegas(lua_State *L)
 {
+  GG_State *gg = L2GG(L);
+  pthread_mutex_lock(&gg->gas_lock);
   L2GG(L)->enable_gas = 0;
+  pthread_mutex_unlock(&gg->gas_lock);
 }
 
 static void lj_setusegas(lua_State *L)
