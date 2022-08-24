@@ -98,7 +98,7 @@ typedef struct GG_State {
 #endif
   ASMFunction dispatch[GG_LEN_DISP];	/* Instruction dispatch tables. */
   BCIns bcff[GG_NUM_ASMFF];		/* Bytecode for ASM fast functions. */
-  uint8_t enable_gas;
+  volatile uint8_t enable_gas;
   volatile uint64_t total_gas;
   uint16_t gas[BC__MAX];
 } GG_State;
