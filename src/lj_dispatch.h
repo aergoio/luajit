@@ -37,83 +37,83 @@ extern double __divdf3(double a, double b);
 #define JITGOTDEF(_)
 #endif
 #if LJ_HASFFI
-#define FFIGOTDEF(_)      \
-    _(lj_meta_equal_cd)   \
-    _(lj_ccallback_enter) \
-    _(lj_ccallback_leave)
+#define FFIGOTDEF(_)    \
+  _(lj_meta_equal_cd)   \
+  _(lj_ccallback_enter) \
+  _(lj_ccallback_leave)
 #else
 #define FFIGOTDEF(_)
 #endif
-#define GOTDEF(_)                \
-    _(floor)                     \
-    _(ceil)                      \
-    _(trunc)                     \
-    _(log)                       \
-    _(log10)                     \
-    _(exp)                       \
-    _(sin)                       \
-    _(cos)                       \
-    _(tan)                       \
-    _(asin)                      \
-    _(acos)                      \
-    _(atan)                      \
-    _(sinh)                      \
-    _(cosh)                      \
-    _(tanh)                      \
-    _(frexp)                     \
-    _(modf)                      \
-    _(atan2)                     \
-    _(pow)                       \
-    _(fmod)                      \
-    _(ldexp)                     \
-    _(lj_vm_modi)                \
-    _(lj_dispatch_call)          \
-    _(lj_dispatch_ins)           \
-    _(lj_dispatch_stitch)        \
-    _(lj_dispatch_profile)       \
-    _(lj_err_throw)              \
-    _(lj_ffh_coroutine_wrap_err) \
-    _(lj_func_closeuv)           \
-    _(lj_func_newL_gc)           \
-    _(lj_gc_barrieruv)           \
-    _(lj_gc_step)                \
-    _(lj_gc_step_fixtop)         \
-    _(lj_meta_arith)             \
-    _(lj_meta_call)              \
-    _(lj_meta_cat)               \
-    _(lj_meta_comp)              \
-    _(lj_meta_equal)             \
-    _(lj_meta_for)               \
-    _(lj_meta_istype)            \
-    _(lj_meta_len)               \
-    _(lj_meta_tget)              \
-    _(lj_meta_tset)              \
-    _(lj_state_growstack)        \
-    _(lj_strfmt_number)          \
-    _(lj_str_new)                \
-    _(lj_tab_dup)                \
-    _(lj_tab_get)                \
-    _(lj_tab_getinth)            \
-    _(lj_tab_len)                \
-    _(lj_tab_new)                \
-    _(lj_tab_newkey)             \
-    _(lj_tab_next)               \
-    _(lj_tab_reasize)            \
-    _(lj_tab_setinth)            \
-    _(lj_buf_putstr_reverse)     \
-    _(lj_buf_putstr_lower)       \
-    _(lj_buf_putstr_upper)       \
-    _(lj_buf_tostr)              \
-    JITGOTDEF(_)                 \
-    FFIGOTDEF(_)                 \
-    SFGOTDEF(_)
+#define GOTDEF(_)              \
+  _(floor)                     \
+  _(ceil)                      \
+  _(trunc)                     \
+  _(log)                       \
+  _(log10)                     \
+  _(exp)                       \
+  _(sin)                       \
+  _(cos)                       \
+  _(tan)                       \
+  _(asin)                      \
+  _(acos)                      \
+  _(atan)                      \
+  _(sinh)                      \
+  _(cosh)                      \
+  _(tanh)                      \
+  _(frexp)                     \
+  _(modf)                      \
+  _(atan2)                     \
+  _(pow)                       \
+  _(fmod)                      \
+  _(ldexp)                     \
+  _(lj_vm_modi)                \
+  _(lj_dispatch_call)          \
+  _(lj_dispatch_ins)           \
+  _(lj_dispatch_stitch)        \
+  _(lj_dispatch_profile)       \
+  _(lj_err_throw)              \
+  _(lj_ffh_coroutine_wrap_err) \
+  _(lj_func_closeuv)           \
+  _(lj_func_newL_gc)           \
+  _(lj_gc_barrieruv)           \
+  _(lj_gc_step)                \
+  _(lj_gc_step_fixtop)         \
+  _(lj_meta_arith)             \
+  _(lj_meta_call)              \
+  _(lj_meta_cat)               \
+  _(lj_meta_comp)              \
+  _(lj_meta_equal)             \
+  _(lj_meta_for)               \
+  _(lj_meta_istype)            \
+  _(lj_meta_len)               \
+  _(lj_meta_tget)              \
+  _(lj_meta_tset)              \
+  _(lj_state_growstack)        \
+  _(lj_strfmt_number)          \
+  _(lj_str_new)                \
+  _(lj_tab_dup)                \
+  _(lj_tab_get)                \
+  _(lj_tab_getinth)            \
+  _(lj_tab_len)                \
+  _(lj_tab_new)                \
+  _(lj_tab_newkey)             \
+  _(lj_tab_next)               \
+  _(lj_tab_reasize)            \
+  _(lj_tab_setinth)            \
+  _(lj_buf_putstr_reverse)     \
+  _(lj_buf_putstr_lower)       \
+  _(lj_buf_putstr_upper)       \
+  _(lj_buf_tostr)              \
+  JITGOTDEF(_)                 \
+  FFIGOTDEF(_)                 \
+  SFGOTDEF(_)
 
 enum
 {
 #define GOTENUM(name) LJ_GOT_##name,
-    GOTDEF(GOTENUM)
+  GOTDEF(GOTENUM)
 #undef GOTENUM
-        LJ_GOT__MAX
+      LJ_GOT__MAX
 };
 #endif
 
@@ -139,23 +139,28 @@ typedef uint16_t HotCount;
 /* Global state, main thread and extra fields are allocated together. */
 typedef struct GG_State
 {
-    lua_State L;    /* Main thread. */
-    global_State g; /* Global state. */
+  lua_State L;    /* Main thread. */
+  global_State g; /* Global state. */
 #if LJ_TARGET_MIPS
-    ASMFunction got[LJ_GOT__MAX]; /* Global offset table. */
+  ASMFunction got[LJ_GOT__MAX]; /* Global offset table. */
 #endif
 #if LJ_HASJIT
-    jit_State J;                      /* JIT state. */
-    HotCount hotcount[HOTCOUNT_SIZE]; /* Hot counters. */
+  jit_State J;                      /* JIT state. */
+  HotCount hotcount[HOTCOUNT_SIZE]; /* Hot counters. */
 #endif
-    ASMFunction dispatch[GG_LEN_DISP]; /* Instruction dispatch tables. */
-    BCIns bcff[GG_NUM_ASMFF];          /* Bytecode for ASM fast functions. */
-    uint8_t use_gas_lock;
-    pthread_mutex_t gas_lock;
-    uint8_t enable_gas;
-    uint64_t total_gas;
-    uint16_t gas[BC__MAX];
+  ASMFunction dispatch[GG_LEN_DISP]; /* Instruction dispatch tables. */
+  BCIns bcff[GG_NUM_ASMFF];          /* Bytecode for ASM fast functions. */
+  uint8_t use_lock;
+  uint8_t enable_gas;
+  uint64_t total_gas;
+  uint16_t gas[BC__MAX];
 } GG_State;
+
+typedef struct GG_State_
+{
+  GG_State G;
+  pthread_mutex_t lock;
+} GG_State_;
 
 #define GG_OFS(field) ((int)offsetof(GG_State, field))
 #define G2GG(gl) ((GG_State *)((char *)(gl)-GG_OFS(g)))
@@ -175,45 +180,47 @@ typedef struct GG_State
 #define GG_DISP2EGAS (GG_OFS(enable_gas) - GG_OFS(dispatch))
 
 #define hotcount_get(gg, pc) \
-    (gg)->hotcount[(u32ptr(pc) >> 2) & (HOTCOUNT_SIZE - 1)]
+  (gg)->hotcount[(u32ptr(pc) >> 2) & (HOTCOUNT_SIZE - 1)]
 #define hotcount_set(gg, pc, val) \
-    (hotcount_get((gg), (pc)) = (HotCount)(val))
+  (hotcount_get((gg), (pc)) = (HotCount)(val))
 
-#define init_gas_lock(gg_)                           \
-    do                                               \
-    {                                                \
-        if ((gg_)->use_gas_lock)                     \
-        {                                            \
-            pthread_mutex_init(&(gg_)->gas_lock, 0); \
-        }                                            \
-    } while (0)
+#define GG_(x_) ((GG_State_ *)x_)
 
-#define destroy_gas_lock(gg_)                        \
-    do                                               \
-    {                                                \
-        if ((gg_)->use_gas_lock)                     \
-        {                                            \
-            pthread_mutex_destroy(&(gg_)->gas_lock); \
-        }                                            \
-    } while (0)
+#define init_gas_lock(gg_)                    \
+  do                                          \
+  {                                           \
+    if ((gg_)->use_lock)                      \
+    {                                         \
+      pthread_mutex_init(&GG_(gg_)->lock, 0); \
+    }                                         \
+  } while (0)
 
-#define acquire_gas_lock(gg_)                     \
-    do                                            \
-    {                                             \
-        if ((gg_)->use_gas_lock)                  \
-        {                                         \
-            pthread_mutex_lock(&(gg_)->gas_lock); \
-        }                                         \
-    } while (0)
+#define destroy_gas_lock(gg_)                 \
+  do                                          \
+  {                                           \
+    if ((gg_)->use_lock)                      \
+    {                                         \
+      pthread_mutex_destroy(&GG_(gg_)->lock); \
+    }                                         \
+  } while (0)
 
-#define release_gas_lock(gg_)                       \
-    do                                              \
-    {                                               \
-        if ((gg_)->use_gas_lock)                    \
-        {                                           \
-            pthread_mutex_unlock(&(gg_)->gas_lock); \
-        }                                           \
-    } while (0)
+#define acquire_gas_lock(gg_)              \
+  do                                       \
+  {                                        \
+    if ((gg_)->use_lock)                   \
+    {                                      \
+      pthread_mutex_lock(&GG_(gg_)->lock); \
+    }                                      \
+  } while (0)
+
+#define release_gas_lock(gg_)                \
+  do                                         \
+  {                                          \
+    if ((gg_)->use_lock)                     \
+    {                                        \
+      pthread_mutex_unlock(&GG_(gg_)->lock); \
+    }                                        \
+  } while (0)
 
 /* Dispatch table management. */
 LJ_FUNC void lj_dispatch_init(GG_State *GG);
@@ -238,12 +245,12 @@ LJ_FUNCA void LJ_FASTCALL lj_dispatch_profile(lua_State *L, const BCIns *pc);
 #if LJ_TARGET_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define ERRNO_SAVE      \
-    int olderr = errno; \
-    DWORD oldwerr = GetLastError();
+#define ERRNO_SAVE    \
+  int olderr = errno; \
+  DWORD oldwerr = GetLastError();
 #define ERRNO_RESTORE \
-    errno = olderr;   \
-    SetLastError(oldwerr);
+  errno = olderr;     \
+  SetLastError(oldwerr);
 #else
 #define ERRNO_SAVE int olderr = errno;
 #define ERRNO_RESTORE errno = olderr;

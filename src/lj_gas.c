@@ -41,12 +41,12 @@ LUA_API void lua_gasuse_mul(lua_State *L, unsigned long long sz, unsigned long l
 
 LUA_API void lua_enable_gas_lock(lua_State *L)
 {
-    L2GG(L)->use_gas_lock = 1;
+    L2GG(L)->use_lock = 1;
 }
 
 LUA_API void lua_disable_gas_lock(lua_State *L)
 {
-    L2GG(L)->use_gas_lock = 0;
+    L2GG(L)->use_lock = 0;
 }
 
 LUA_API void lua_enablegas(lua_State *L)
