@@ -39,16 +39,6 @@ LUA_API void lua_gasuse_mul(lua_State *L, unsigned long long sz, unsigned long l
     lua_gasuse(L, lj_gas_mul_no_ovt(sz, n));
 }
 
-LUA_API void lua_enable_gas_lock(lua_State *L)
-{
-    L2GG(L)->use_lock = 1;
-}
-
-LUA_API void lua_disable_gas_lock(lua_State *L)
-{
-    L2GG(L)->use_lock = 0;
-}
-
 LUA_API void lua_enablegas(lua_State *L)
 {
     GG_State *gg = L2GG(L);

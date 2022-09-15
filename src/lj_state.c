@@ -161,9 +161,19 @@ static TValue *cpluaopen(lua_State *L, lua_CFunction dummy, void *ud)
   return NULL;
 }
 
+static inline size_t get_gg_size(uint8_t use_lock)
+{
+  if (use_lock) {
+    return sizeof(GG_State_);
+  } 
+  return sizeof(GG_State);
+}
+
 static void close_state(lua_State *L)
 {
   global_State *g = G(L);
+  size_t gg_size = get_gg_size(L2GG(L)->use_lock);
+
   destroy_gas_lock(L2GG(L));
   lj_func_closeuv(L, tvref(L->stack));
   lj_gc_freeall(g);
@@ -176,27 +186,28 @@ static void close_state(lua_State *L)
   lj_mem_freevec(g, g->strhash, g->strmask + 1, GCRef);
   lj_buf_free(g, &g->tmpbuf);
   lj_mem_freevec(g, tvref(L->stack), L->stacksize, TValue);
-  lua_assert(g->gc.total == sizeof(GG_State));
+  lua_assert(g->gc.total == gg_size);
 #ifndef LUAJIT_USE_SYSMALLOC
   if (g->allocf == lj_alloc_f)
     lj_alloc_destroy(g->allocd);
   else
 #endif
-    g->allocf(g->allocd, G2GG(g), sizeof(GG_State), 0);
+    g->allocf(g->allocd, G2GG(g), gg_size, 0);
 }
 
 #if LJ_64 && !LJ_GC64 && !(defined(LUAJIT_USE_VALGRIND) && defined(LUAJIT_USE_SYSMALLOC))
-lua_State *lj_state_newstate(lua_Alloc f, void *ud)
+lua_State *lj_state_newstate_(lua_Alloc f, void *ud, uint8_t use_lock)
 #else
-LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
+LUA_API lua_State *lua_newstate_(lua_Alloc f, void *ud, uint8_t use_lock)
 #endif
 {
-  GG_State *GG = (GG_State *)f(ud, NULL, 0, sizeof(GG_State));
+  size_t gg_size = get_gg_size(use_lock);
+  GG_State *GG = (GG_State *)f(ud, NULL, 0, gg_size);
   lua_State *L = &GG->L;
   global_State *g = &GG->g;
   if (GG == NULL || !checkptrGC(GG))
     return NULL;
-  memset(GG, 0, sizeof(GG_State));
+  memset(GG, 0, gg_size);
   L->gct = ~LJ_TTHREAD;
   L->marked = LJ_GC_WHITE0 | LJ_GC_FIXED | LJ_GC_SFIXED; /* Prevent free. */
   L->dummy_ffid = FF_C;
@@ -220,10 +231,10 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
   g->gc.state = GCSpause;
   setgcref(g->gc.root, obj2gco(L));
   setmref(g->gc.sweep, &g->gc.root);
-  g->gc.total = g->gc.max = sizeof(GG_State);
+  g->gc.total = g->gc.max = gg_size;
   g->gc.pause = LUAI_GCPAUSE;
   g->gc.stepmul = LUAI_GCMUL;
-  GG->use_lock = 0;
+  GG->use_lock = use_lock;
   lj_dispatch_init((GG_State *)L);
   L->status = LUA_ERRERR + 1; /* Avoid touching the stack upon memory error. */
   if (lj_vm_cpcall(L, NULL, NULL, cpluaopen) != 0)
@@ -234,6 +245,19 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
   }
   L->status = LUA_OK;
   return L;
+}
+
+#if LJ_64 && !LJ_GC64 && !(defined(LUAJIT_USE_VALGRIND) && defined(LUAJIT_USE_SYSMALLOC))
+lua_State *lj_state_newstate(lua_Alloc f, void *ud)
+#else
+LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
+#endif
+{
+#if LJ_64 && !LJ_GC64 && !(defined(LUAJIT_USE_VALGRIND) && defined(LUAJIT_USE_SYSMALLOC))
+    return lj_state_newstate_(f, ud, 0);
+#else
+    return lua_newstate_(f, ud, 0);
+#endif
 }
 
 static TValue *cpfinalize(lua_State *L, lua_CFunction dummy, void *ud)

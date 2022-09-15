@@ -13,6 +13,16 @@
 
 #include "luaconf.h"
 
+#if defined(_MSC_VER)
+/* MSVC is stuck in the last century and doesn't have C99's stdint.h. */
+typedef unsigned __int8 uint8_t;
+#elif defined(__symbian__)
+/* Cough. */
+typedef unsigned char uint8_t;
+#else
+#include <stdint.h>
+#endif
+
 #define LUA_VERSION "Lua 5.1"
 #define LUA_RELEASE "Lua 5.1.4"
 #define LUA_VERSION_NUM 501
@@ -92,6 +102,7 @@ typedef LUA_INTEGER lua_Integer;
 ** state manipulation
 */
 LUA_API lua_State *(lua_newstate)(lua_Alloc f, void *ud);
+LUA_API lua_State *(lua_newstate_)(lua_Alloc f, void *ud, uint8_t use_lock);
 LUA_API void(lua_close)(lua_State *L);
 LUA_API lua_State *(lua_newthread)(lua_State *L);
 
@@ -360,8 +371,6 @@ LUA_API unsigned long long lua_gasget(lua_State *L);
 LUA_API unsigned char lua_usegas(lua_State *L);
 LUA_API void lua_enablegas(lua_State *L);
 LUA_API void lua_disablegas(lua_State *L);
-LUA_API void lua_enable_gas_lock(lua_State *L);
-LUA_API void lua_disable_gas_lock(lua_State *L);
 
 /******************************************************************************
  * Copyright (C) 1994-2008 Lua.org, PUC-Rio.  All rights reserved.

@@ -355,6 +355,20 @@ LUALIB_API lua_State *luaL_newstate(void)
   return L;
 }
 
+LUALIB_API lua_State *luaL_newstate_lock(void)
+{
+  lua_State *L;
+  void *ud = lj_alloc_create();
+  if (ud == NULL) return NULL;
+#if LJ_64 && !LJ_GC64
+  L = lj_state_newstate_(lj_alloc_f, ud, 1);
+#else
+  L = lua_newstate_(lj_alloc_f, ud, 1);
+#endif
+  if (L) G(L)->panic = panic;
+  return L;
+}
+
 #if LJ_64 && !LJ_GC64
 LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
 {
