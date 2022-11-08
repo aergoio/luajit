@@ -28,6 +28,7 @@ LUA_API void lua_gasuse(lua_State *L, unsigned long long sz)
     }
     if (gg->total_gas < sz)
     {
+        release_gas_lock(gg);
         lj_err_gas(L);
     }
     gg->total_gas -= sz;
