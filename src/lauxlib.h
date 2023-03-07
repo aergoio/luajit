@@ -138,10 +138,11 @@ typedef struct luaL_Buffer {
   int lvl;  /* number of strings in the stack (level) */
   lua_State *L;
   char buffer[LUAL_BUFFERSIZE];
+  int hardfork_version;
 } luaL_Buffer;
 
 #define luaL_addchar(B,c) \
-  ((void)((B)->p < ((B)->buffer+((G((B)->L))->hardfork_version = 2 ? 1024 : LUAL_BUFFERSIZE)) || luaL_prepbuffer(B)), \
+  ((void)((B)->p < ((B)->buffer+((B)->hardfork_version = 2 ? 1024 : LUAL_BUFFERSIZE)) || luaL_prepbuffer(B)), \
    (*(B)->p++ = (char)(c)))
 
 /* compatibility only */
