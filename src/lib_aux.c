@@ -179,7 +179,7 @@ LUALIB_API const char *luaL_gsub(lua_State *L, const char *s,
 /* -- Buffer handling ----------------------------------------------------- */
 
 #define bufflen(B)	((size_t)((B)->p - (B)->buffer))
-#define bufffree(B)	((size_t)(LUAL_BUFFERSIZE - bufflen(B)))
+#define bufffree(B)	((size_t)(((B)->hardfork_version <= 2 ? 1024 : 8192) - bufflen(B)))
 
 static int emptybuffer(luaL_Buffer *B)
 {
@@ -257,6 +257,7 @@ LUALIB_API void luaL_buffinit(lua_State *L, luaL_Buffer *B)
   B->L = L;
   B->p = B->buffer;
   B->lvl = 0;
+  B->hardfork_version = G(L)->hardfork_version;
 }
 
 /* -- Reference management ------------------------------------------------ */

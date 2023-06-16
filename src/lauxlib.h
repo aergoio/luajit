@@ -137,12 +137,13 @@ LUALIB_API void (luaL_setmetatable) (lua_State *L, const char *tname);
 typedef struct luaL_Buffer {
   char *p;			/* current position in buffer */
   int lvl;  /* number of strings in the stack (level) */
+  int hardfork_version;
   lua_State *L;
-  char buffer[LUAL_BUFFERSIZE];
+  char buffer[8192];
 } luaL_Buffer;
 
 #define luaL_addchar(B,c) \
-  ((void)((B)->p < ((B)->buffer+LUAL_BUFFERSIZE) || luaL_prepbuffer(B)), \
+  ((void)((B)->p < ((B)->buffer+((B)->hardfork_version <= 2 ? 1024 : 8192)) || luaL_prepbuffer(B)), \
    (*(B)->p++ = (char)(c)))
 
 /* compatibility only */
