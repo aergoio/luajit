@@ -66,13 +66,13 @@
       lua_getfield((L), -2, varname); /* payable apis oldflag */ \
       newflag = (flag)|lua_tointeger(L, -1); \
       if (newflag & ABI_PROTO_FLAG_VIEW) { \
-      	if ((newflag & ABI_PROTO_FLAG_PAYABLE)) \
-        	luaL_error((L), "cannot payable for view function"); \
-		change_view_function((L), varname); \
+        if ((newflag & ABI_PROTO_FLAG_PAYABLE)) \
+          luaL_error((L), "cannot payable for view function"); \
+        change_view_function((L), varname); \
       } \
       if (strcmp(varname, ABI_CHECK_FEE_DELEGATION) == 0) { \
-		 if ((newflag & ABI_PROTO_FLAG_VIEW) == 0)  \
-        	luaL_error((L), "fee delegation check function must be view function"); \
+        if ((newflag & ABI_PROTO_FLAG_VIEW) == 0)  \
+          luaL_error((L), "fee delegation check function must be view function"); \
       } \
       lua_pushinteger((L), newflag); /* payable apis oldflag flag */ \
       lua_setfield((L), -4, varname); /* payable apis oldflag */ \
