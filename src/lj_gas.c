@@ -66,4 +66,3 @@ int32_t lj_gas_strunit(int32_t sz)
 {
   return (sz+LJ_GAS_STRUNIT-1) / LJ_GAS_STRUNIT;
 }
-

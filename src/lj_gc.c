@@ -794,7 +794,7 @@ void lj_gc_closeuv(global_State *g, GCupval *uv)
     if (g->gc.state == GCSpropagate || g->gc.state == GCSatomic) {
       gray2black(o);  /* Make it black and preserve invariant. */
       if (tviswhite(&uv->tv))
-	lj_gc_barrierf(g, o, gcV(&uv->tv));
+        lj_gc_barrierf(g, o, gcV(&uv->tv));
     } else {
       makewhite(g, o);  /* Make it white, i.e. sweep the upvalue. */
       lua_assert(g->gc.state != GCSfinalize && g->gc.state != GCSpause);
@@ -811,7 +811,7 @@ void lj_gc_barriertrace(global_State *g, uint32_t traceno)
 }
 #endif
 
-static void lj_gc_gas(lua_State *L, GCSize osz, GCSize nsz)
+static void lj_mem_gas(lua_State *L, GCSize osz, GCSize nsz)
 {
   global_State *g = G(L);
   GCSize ntsz = (g->gc.total - osz) + nsz;
@@ -833,7 +833,7 @@ void *lj_mem_realloc(lua_State *L, void *p, GCSize osz, GCSize nsz)
     lj_err_mem(L);
   }
   lua_assert((osz == 0) == (p == NULL));
-  lj_gc_gas(L, osz, nsz);
+  lj_mem_gas(L, osz, nsz);
   p = g->allocf(g->allocd, p, osz, nsz);
   if (p == NULL && nsz > 0) {
     lj_err_setsys(L);
@@ -853,7 +853,7 @@ void * LJ_FASTCALL lj_mem_newgco(lua_State *L, GCSize size)
   if (g->checkmaxmem && (g->gc.total + size >= GCMEMMAXSIZE)) {
     lj_err_mem(L);
   }
-  lj_gc_gas(L, (GCSize)0, size);
+  lj_mem_gas(L, (GCSize)0, size);
   o = (GCobj *)g->allocf(g->allocd, NULL, 0, size);
   if (o == NULL) {
     lj_err_setsys(L);
