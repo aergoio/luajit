@@ -77,7 +77,6 @@ LUA_API void lua_gasset(lua_State *L, unsigned long long sz)
 
 LUA_API unsigned long long lua_gasget(lua_State *L)
 {
-
     uint64_t result;
     GG_State *gg = L2GG(L);
     acquire_gas_lock(gg);
