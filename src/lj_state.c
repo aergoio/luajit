@@ -157,9 +157,19 @@ static TValue *cpluaopen(lua_State *L, lua_CFunction dummy, void *ud)
   return NULL;
 }
 
+static inline size_t get_gg_size(int version)
+{
+  if (version == 3) {
+    // for backwards compatibility regarding total memory and gas
+    return 6240;
+  }
+  return sizeof(GG_State);
+}
+
 static void close_state(lua_State *L)
 {
   global_State *g = G(L);
+  size_t gg_size = get_gg_size(G(L)->hardfork_version);
   lj_func_closeuv(L, tvref(L->stack));
   lj_gc_freeall(g);
   lua_assert(gcref(g->gc.root) == obj2gco(L));
@@ -171,22 +181,23 @@ static void close_state(lua_State *L)
   lj_mem_freevec(g, g->strhash, g->strmask+1, GCRef);
   lj_buf_free(g, &g->tmpbuf);
   lj_mem_freevec(g, tvref(L->stack), L->stacksize, TValue);
-  lua_assert(g->gc.total == sizeof(GG_State));
+  lua_assert(g->gc.total == gg_size);
 #ifndef LUAJIT_USE_SYSMALLOC
   if (g->allocf == lj_alloc_f)
     lj_alloc_destroy(g->allocd);
   else
 #endif
-    g->allocf(g->allocd, G2GG(g), sizeof(GG_State), 0);
+    g->allocf(g->allocd, G2GG(g), gg_size, 0);
 }
 
 #if LJ_64 && !LJ_GC64 && !(defined(LUAJIT_USE_VALGRIND) && defined(LUAJIT_USE_SYSMALLOC))
-lua_State *lj_state_newstate(lua_Alloc f, void *ud)
+lua_State *lj_state_newstate(lua_Alloc f, void *ud, int version)
 #else
-LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
+LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud, int version)
 #endif
 {
-  GG_State *GG = (GG_State *)f(ud, NULL, 0, sizeof(GG_State));
+  size_t gg_size = get_gg_size(version);
+  GG_State *GG = (GG_State *)f(ud, NULL, 0, gg_size);
   lua_State *L = &GG->L;
   global_State *g = &GG->g;
   if (GG == NULL || !checkptrGC(GG)) return NULL;
@@ -214,9 +225,10 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
   g->gc.state = GCSpause;
   setgcref(g->gc.root, obj2gco(L));
   setmref(g->gc.sweep, &g->gc.root);
-  g->gc.total = g->gc.max = sizeof(GG_State);
+  g->gc.total = g->gc.max = gg_size;
   g->gc.pause = LUAI_GCPAUSE;
   g->gc.stepmul = LUAI_GCMUL;
+  g->hardfork_version = version;
   lj_dispatch_init((GG_State *)L);
   L->status = LUA_ERRERR+1;  /* Avoid touching the stack upon memory error. */
   if (lj_vm_cpcall(L, NULL, NULL, cpluaopen) != 0) {
