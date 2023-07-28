@@ -832,19 +832,19 @@ void lj_mem_gas(lua_State *L, GCSize osz, GCSize nsz)
     GG_State *gg = L2GG(L);
     if (gg->enable_gas == 0) return;
     // update current memory usage
-    g->gc.user_total -= osz;
-    g->gc.user_total += nsz;
+    g->user_total -= osz;
+    g->user_total += nsz;
     // if current memory usage is greater than maximum memory usage
-    if (g->gc.user_total > g->gc.max) {
+    if (g->user_total > g->gc.max) {
       // if we are not in an error state
       if (L->status == LUA_OK) {
         // compute the difference
-        GCSize d = g->gc.user_total - g->gc.max;
+        GCSize d = g->user_total - g->gc.max;
         // update gas
         lua_gasuse_mul(L, GAS_MEM, d);
       }
       // update maximum memory usage
-      g->gc.max = g->gc.user_total;
+      g->gc.max = g->user_total;
     }
   } else {
     // use legacy gas computation for hardfork <= 3

@@ -588,7 +588,6 @@ typedef struct GCState {
   GCSize estimate;	/* Estimate of memory actually in use. */
   MSize stepmul;	/* Incremental GC step granularity. */
   MSize pause;		/* Pause between successive GC cycles. */
-  GCSize user_total;	/* Memory allocated by the script */
   GCSize max;
 } GCState;
 
@@ -626,11 +625,12 @@ typedef struct global_State {
   uint8_t syserror;
   uint8_t uncatchablerror;
   uint8_t checkmaxmem;
+  uint8_t use_gas;
   int service;
   int hardfork_version;
   int inst_count;
   int inst_limit;
-  uint8_t use_gas;
+  GCSize user_total;	/* Memory allocated by the script */
 } global_State;
 
 #define mainthread(g)	(&gcref(g->mainthref)->th)
