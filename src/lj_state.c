@@ -163,6 +163,7 @@ static inline size_t get_gg_size(int version)
     // for backwards compatibility regarding total memory and gas
     return 6240;
   }
+  lua_assert(sizeof(GG_State) == 6200);
   return sizeof(GG_State);
 }
 
@@ -225,7 +226,9 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud, int version)
   g->gc.state = GCSpause;
   setgcref(g->gc.root, obj2gco(L));
   setmref(g->gc.sweep, &g->gc.root);
-  g->gc.total = g->gc.max = gg_size;
+  g->gc.total = gg_size;
+  if (version < 4)
+    g->gc.max = gg_size;
   g->gc.pause = LUAI_GCPAUSE;
   g->gc.stepmul = LUAI_GCMUL;
   g->hardfork_version = version;
