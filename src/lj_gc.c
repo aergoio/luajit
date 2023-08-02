@@ -688,7 +688,9 @@ int LJ_FASTCALL lj_gc_step(lua_State *L)
   if (g->gc.total > g->gc.threshold)
     g->gc.debt += g->gc.total - g->gc.threshold;
   do {
-    lua_gasuse(L, GAS_SLOW);
+    if (g->hardfork_version < 4) {
+      lua_gasuse(L, GAS_SLOW);
+    }
     lim -= (GCSize)gc_onestep(L);
     if (g->gc.state == GCSpause) {
       g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
