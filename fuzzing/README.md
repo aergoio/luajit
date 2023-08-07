@@ -11,11 +11,11 @@
 Simple run:
 
 ```
-./fuzz_decoder
+./fuzz_loader
 ```
 
 In parallel:
 
 ```
-./fuzz_decoder -jobs=4
+./fuzz_loader -jobs=4
 ```
