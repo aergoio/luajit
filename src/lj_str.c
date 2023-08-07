@@ -15,6 +15,7 @@
 /* -- String helpers ------------------------------------------------------ */
 
 /* Ordered compare of strings. Assumes string data is 4-byte aligned. */
+__attribute__((no_sanitize_address))
 int32_t LJ_FASTCALL lj_str_cmp(GCstr *a, GCstr *b)
 {
   MSize i, n = a->len > b->len ? b->len : a->len;
@@ -38,6 +39,7 @@ int32_t LJ_FASTCALL lj_str_cmp(GCstr *a, GCstr *b)
 }
 
 /* Fast string data comparison. Caveat: unaligned access to 1st string! */
+__attribute__((no_sanitize_address))
 static LJ_AINLINE int str_fastcmp(const char *a, const char *b, MSize len)
 {
   MSize i = 0;
@@ -119,6 +121,7 @@ void lj_str_resize(lua_State *L, MSize newmask)
 }
 
 /* Intern a string and return string object. */
+__attribute__((no_sanitize_address))
 GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
 {
   global_State *g;
