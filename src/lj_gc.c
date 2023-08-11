@@ -834,6 +834,7 @@ void lj_mem_gas(lua_State *L, GCSize osz, GCSize nsz)
     GG_State *gg = L2GG(L);
     if (gg->enable_gas == 0) return;
     // update current memory usage
+    if (osz > g->user_total) return;
     g->user_total -= osz;
     g->user_total += nsz;
     // if current memory usage is greater than maximum memory usage
