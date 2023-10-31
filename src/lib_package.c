@@ -307,11 +307,19 @@ static const luaL_Reg package_lib[] = {
   { NULL, NULL }
 };
 
-static const luaL_Reg package_global[] = {
+static const luaL_Reg package_global_v2[] = {
 #if LJ_ENABLE_DEBUG
   { "module",	lj_cf_package_module },
 #endif
   { "require",	lj_cf_package_require },
+  { NULL, NULL }
+};
+
+static const luaL_Reg package_global_v4[] = {
+#if LJ_ENABLE_DEBUG
+  { "module",	lj_cf_package_module },
+  { "require",	lj_cf_package_require },
+#endif
   { NULL, NULL }
 };
 
@@ -354,7 +362,11 @@ LUALIB_API int luaopen_package(lua_State *L)
   luaL_findtable(L, LUA_REGISTRYINDEX, "_PRELOAD", 4);
   lua_setfield(L, -2, "preload");
   lua_pushvalue(L, LUA_GLOBALSINDEX);
-  luaL_register(L, NULL, package_global);
+  if (luaL_hardforkversion(L) >= 4) {
+    luaL_register(L, NULL, package_global_v4);
+  } else {
+    luaL_register(L, NULL, package_global_v2);
+  }
   lua_pop(L, 1);
   return 1;
 }
