@@ -1570,6 +1570,9 @@ static void build_subroutines(BuildCtx *ctx)
   |
   |.ffunc_1 pcall
   |  ff_gasuse GAS_EXT
+  |  mov L:RB, SAVE_L
+  |  lea RA, [BASE+NARGS:RD*8]
+  |  cmp RA, L:RB->maxstack; ja ->fff_fallback
   |  lea RA, [BASE+16]
   |  sub NARGS:RDd, 1
   |  mov PCd, 16+FRAME_PCALL
@@ -1589,6 +1592,9 @@ static void build_subroutines(BuildCtx *ctx)
   |
   |.ffunc_2 xpcall
   |  ff_gasuse GAS_EXT
+  |  mov L:RB, SAVE_L
+  |  lea RA, [BASE+NARGS:RD*8]
+  |  cmp RA, L:RB->maxstack; ja ->fff_fallback
   |  mov LFUNC:RA, [BASE+8]
   |  checktp_nc LFUNC:RA, LJ_TFUNC, ->fff_fallback
   |  mov LFUNC:RB, [BASE]		// Swap function and traceback.
