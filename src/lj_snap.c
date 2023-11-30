@@ -116,6 +116,9 @@ static MSize snapshot_framelinks(jit_State *J, SnapEntry *map, uint8_t *topslot)
   MSize f = 0;
   map[f++] = SNAP_MKPC(J->pc);  /* The current PC is always the first entry. */
 #endif
+  lua_assert(!J->pt ||
+	     (J->pc >= proto_bc(J->pt) &&
+	      J->pc < proto_bc(J->pt) + J->pt->sizebc));
   while (frame > lim) {  /* Backwards traversal of all frames above base. */
     if (frame_islua(frame)) {
 #if !LJ_FR2
@@ -266,7 +269,7 @@ static BCReg snap_usedef(jit_State *J, uint8_t *udf,
        if (!(op == BC_ISTC || op == BC_ISFC)) DEF_SLOT(bc_a(ins));
        break;
     case BCMbase:
-      if (op >= BC_CALLM && op <= BC_VARG) {
+      if (op >= BC_CALLM && op <= BC_ITERN) {
 	BCReg top = (op == BC_CALLM || op == BC_CALLMT || bc_c(ins) == 0) ?
 		    maxslot : (bc_a(ins) + bc_c(ins)+LJ_FR2);
 	if (LJ_FR2) DEF_SLOT(bc_a(ins)+1);
@@ -277,6 +280,8 @@ static BCReg snap_usedef(jit_State *J, uint8_t *udf,
 	  for (s = 0; s < bc_a(ins); s++) DEF_SLOT(s);
 	  return 0;
 	}
+      } else if (op == BC_VARG) {
+	return maxslot;  /* NYI: punt. */
       } else if (op == BC_KNIL) {
 	for (s = bc_a(ins); s <= bc_d(ins); s++) DEF_SLOT(s);
       } else if (op == BC_TSETM) {
@@ -298,8 +303,10 @@ static BCReg snap_usedef(jit_State *J, uint8_t *udf,
 void lj_snap_purge(jit_State *J)
 {
   uint8_t udf[SNAP_USEDEF_SLOTS];
-  BCReg maxslot = J->maxslot;
-  BCReg s = snap_usedef(J, udf, J->pc, maxslot);
+  BCReg s, maxslot = J->maxslot;
+  if (bc_op(*J->pc) == BC_FUNCV && maxslot > J->pt->numparams)
+    maxslot = J->pt->numparams;
+  s = snap_usedef(J, udf, J->pc, maxslot);
   for (; s < maxslot; s++)
     if (udf[s] != 0)
       J->base[s] = 0;  /* Purge dead slots. */
@@ -688,7 +695,7 @@ static void snap_restoredata(GCtrace *T, ExitState *ex,
   int32_t *src;
   uint64_t tmp;
   if (irref_isk(ref)) {
-    if (ir->o == IR_KNUM || ir->o == IR_KINT64) {
+    if (ir_isk64(ir)) {
       src = (int32_t *)&ir[1];
     } else if (sz == 8) {
       tmp = (uint64_t)(uint32_t)ir->i;

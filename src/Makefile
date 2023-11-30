@@ -110,8 +110,8 @@ XCFLAGS+= -DLUAJIT_DISABLE_FFI
 #XCFLAGS+= -DLUAJIT_NUMMODE=1
 XCFLAGS+= -DLUAJIT_NUMMODE=2
 #
-# Enable GC64 mode for x64.
-XCFLAGS+= -DLUAJIT_ENABLE_GC64
+# Disable LJ_GC64 mode for x64.
+#XCFLAGS+= -DLUAJIT_DISABLE_GC64
 #
 XCFLAGS+= -DLUAJIT_ENABLE_CHECKHOOK
 ##############################################################################
@@ -362,7 +362,7 @@ ifneq ($(HOST_SYS),$(TARGET_SYS))
     HOST_XCFLAGS+= -DLUAJIT_OS=LUAJIT_OS_OSX
   else
   ifeq (iOS,$(TARGET_SYS))
-    HOST_XCFLAGS+= -DLUAJIT_OS=LUAJIT_OS_OSX
+    HOST_XCFLAGS+= -DLUAJIT_OS=LUAJIT_OS_OSX -DTARGET_OS_IPHONE=1
   else
     HOST_XCFLAGS+= -DLUAJIT_OS=LUAJIT_OS_OTHER
   endif
@@ -454,9 +454,6 @@ ifeq (ppc,$(TARGET_LJARCH))
   endif
   ifeq (PS3,$(TARGET_SYS))
     DASM_AFLAGS+= -D PPE -D TOC
-  endif
-  ifneq (,$(findstring LJ_ARCH_PPC64 ,$(TARGET_TESTARCH)))
-    DASM_ARCH= ppc64
   endif
 endif
 endif
@@ -601,7 +598,6 @@ E= @echo
 default all:	$(TARGET_T)
 
 amalg:
-	@grep "^[+|]" ljamalg.c
 	$(MAKE) all "LJCORE_O=ljamalg.o"
 
 clean:

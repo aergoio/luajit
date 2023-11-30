@@ -317,9 +317,9 @@ static void LJ_FASTCALL recff_select(jit_State *J, RecordFFData *rd)
       ptrdiff_t n = (ptrdiff_t)J->maxslot;
       if (start < 0) start += n;
       else if (start > n) start = n;
-      rd->nres = n - start;
       if (start >= 1) {
 	ptrdiff_t i;
+	rd->nres = n - start;
 	for (i = 0; i < n - start; i++)
 	  J->base[i] = J->base[start+i];
       }  /* else: Interpreter will throw. */
@@ -752,6 +752,8 @@ static void LJ_FASTCALL recff_string_char(jit_State *J, RecordFFData *rd)
     for (i = 0; J->base[i] != 0; i++)
       tr = emitir(IRT(IR_BUFPUT, IRT_PGC), tr, J->base[i]);
     J->base[0] = emitir(IRT(IR_BUFSTR, IRT_STR), tr, hdr);
+  } else if (i == 0) {
+    J->base[0] = lj_ir_kstr(J, &J2G(J)->strempty);
   }
   UNUSED(rd);
 }
@@ -835,7 +837,8 @@ static void LJ_FASTCALL recff_string_find(jit_State *J, RecordFFData *rd)
 		    str->len-(MSize)start, pat->len)) {
       TRef pos;
       emitir(IRTG(IR_NE, IRT_PGC), tr, trp0);
-      pos = emitir(IRTI(IR_SUB), tr, emitir(IRT(IR_STRREF, IRT_PGC), trstr, tr0));
+      /* Recompute offset. trsptr may not point into trstr after folding. */
+      pos = emitir(IRTI(IR_ADD), emitir(IRTI(IR_SUB), tr, trsptr), trstart);
       J->base[0] = emitir(IRTI(IR_ADD), pos, lj_ir_kint(J, 1));
       J->base[1] = emitir(IRTI(IR_ADD), pos, trplen);
       rd->nres = 2;

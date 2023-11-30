@@ -769,7 +769,7 @@ LUA_API void lua_concat(lua_State *L, int n)
 	L->top -= n;
 	break;
       }
-      n -= (int)(L->top - top);
+      n -= (int)(L->top - (top - 2*LJ_FR2));
       L->top = top+2;
       lj_vm_call(L, top, 1+1);
       L->top -= 1+LJ_FR2;
@@ -898,7 +898,8 @@ LUA_API int lua_next(lua_State *L, int idx)
 LUA_API const char *lua_getupvalue(lua_State *L, int idx, int n)
 {
   TValue *val;
-  const char *name = lj_debug_uvnamev(index2adr(L, idx), (uint32_t)(n-1), &val);
+  GCobj *o;
+  const char *name = lj_debug_uvnamev(index2adr(L, idx), (uint32_t)(n-1), &val, &o);
   if (name) {
     copyTV(L, L->top, val);
     incr_top(L);
@@ -1084,13 +1085,14 @@ LUA_API const char *lua_setupvalue(lua_State *L, int idx, int n)
 {
   cTValue *f = index2adr(L, idx);
   TValue *val;
+  GCobj *o;
   const char *name;
   api_checknelems(L, 1);
-  name = lj_debug_uvnamev(f, (uint32_t)(n-1), &val);
+  name = lj_debug_uvnamev(f, (uint32_t)(n-1), &val, &o);
   if (name) {
     L->top--;
     copyTV(L, val, L->top);
-    lj_gc_barrier(L, funcV(f), L->top);
+    lj_gc_barrier(L, o, L->top);
   }
   return name;
 }
@@ -1204,11 +1206,12 @@ LUA_API int lua_yield(lua_State *L, int nresults)
       setcont(top, lj_cont_hook);
       if (LJ_FR2) top++;
       setframe_pc(top, cframe_pc(cf)-1);
-      if (LJ_FR2) top++;
+      top++;
       setframe_gc(top, obj2gco(L), LJ_TTHREAD);
+      if (LJ_FR2) top++;
       setframe_ftsz(top, ((char *)(top+1)-(char *)L->base)+FRAME_CONT);
       L->top = L->base = top+1;
-#if LJ_TARGET_X64
+#if ((defined(__GNUC__) || defined(__clang__)) && (LJ_TARGET_X64 || defined(LUAJIT_UNWIND_EXTERNAL)) && !LJ_NO_UNWIND) || LJ_TARGET_WINDOWS
       lj_err_throw(L, LUA_YIELD);
 #else
       L->cframe = NULL;
