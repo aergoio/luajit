@@ -61,7 +61,7 @@
 ** The POSIX/x64 interpreter only saves r12/r13 for INT (e.g. PS4).
 */
 
-#if defined(__GNUC__) && (LJ_TARGET_X64 || defined(LUAJIT_UNWIND_EXTERNAL)) && !LJ_NO_UNWIND
+#if (defined(__GNUC__) || defined(__clang__)) && (LJ_TARGET_X64 || defined(LUAJIT_UNWIND_EXTERNAL)) && !LJ_NO_UNWIND
 #define LJ_UNWIND_EXT	1
 #elif LJ_TARGET_WINDOWS
 #define LJ_UNWIND_EXT	1
@@ -188,7 +188,7 @@ static void *err_unwind(lua_State *L, void *stopcf, int cleanup, int errcode)
 
 /* -- External frame unwinding -------------------------------------------- */
 
-#if defined(__GNUC__) && !LJ_NO_UNWIND && !LJ_ABI_WIN
+#if (defined(__GNUC__) || defined(__clang__)) && !LJ_NO_UNWIND && !LJ_ABI_WIN
 
 /*
 ** We have to use our own definitions instead of the mandatory (!) unwind.h,
@@ -552,6 +552,11 @@ LJ_NOINLINE void lj_err_mem(lua_State *L)
   lj_err_setuncatchable(L);
   if (L->status == LUA_ERRERR+1)  /* Don't touch the stack during lua_open. */
     lj_vm_unwind_c(L->cframe, LUA_ERRMEM);
+  if (LJ_HASJIT) {
+    TValue *base = tvref(G(L)->jit_base);
+    if (base) L->base = base;
+  }
+  if (curr_funcisL(L)) L->top = curr_topL(L);
   setstrV(L, L->top++, lj_err_str(L, LJ_ERR_ERRMEM));
   lj_err_throw(L, LUA_ERRMEM);
 }
@@ -591,6 +596,7 @@ static ptrdiff_t finderrfunc(lua_State *L)
       if (cframe_canyield(cf)) return 0;
       if (cframe_errfunc(cf) >= 0)
 	return cframe_errfunc(cf);
+      cf = cframe_prev(cf);
       frame = frame_prevd(frame);
       break;
     case FRAME_PCALL:
@@ -696,9 +702,9 @@ LJ_NOINLINE void lj_err_optype_call(lua_State *L, TValue *o)
   const BCIns *pc = cframe_Lpc(L);
   if (((ptrdiff_t)pc & FRAME_TYPE) != FRAME_LUA) {
     const char *tname = lj_typename(o);
+    setframe_gc(o, obj2gco(L), LJ_TTHREAD);
     if (LJ_FR2) o++;
     setframe_pc(o, pc);
-    setframe_gc(o, obj2gco(L), LJ_TTHREAD);
     L->top = L->base = o+1;
     err_msgv(L, LJ_ERR_BADCALL, tname);
   }

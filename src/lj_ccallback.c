@@ -406,7 +406,7 @@ void lj_ccallback_mcode_free(CTState *cts)
       nfpr = CCALL_NARG_FPR;  /* Prevent reordering. */ \
     } \
   } else { \
-    if (!LJ_TARGET_IOS && n > 1) \
+    if (!LJ_TARGET_OSX && n > 1) \
       ngpr = (ngpr + 1u) & ~1u;  /* Align to regpair. */ \
     if (ngpr + n <= maxgpr) { \
       sp = &cts->cb.gpr[ngpr]; \
@@ -545,13 +545,13 @@ static void callback_conv_args(CTState *cts, lua_State *L)
   if (LJ_FR2) {
     (o++)->u64 = LJ_CONT_FFI_CALLBACK;
     (o++)->u64 = rid;
-    o++;
   } else {
     o->u32.lo = LJ_CONT_FFI_CALLBACK;
     o->u32.hi = rid;
     o++;
   }
   setframe_gc(o, obj2gco(fn), fntp);
+  if (LJ_FR2) o++;
   setframe_ftsz(o, ((char *)(o+1) - (char *)L->base) + FRAME_CONT);
   L->top = L->base = ++o;
   if (!ct)

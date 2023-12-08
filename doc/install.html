@@ -38,7 +38,7 @@ td.compatno {
 </head>
 <body>
 <div id="site">
-<a href="http://luajit.org"><span>Lua<span id="logo">JIT</span></span></a>
+<a href="https://luajit.org"><span>Lua<span id="logo">JIT</span></span></a>
 </div>
 <div id="head">
 <h1>Installation</h1>
@@ -47,7 +47,7 @@ td.compatno {
 <ul><li>
 <a href="luajit.html">LuaJIT</a>
 <ul><li>
-<a href="http://luajit.org/download.html">Download <span class="ext">&raquo;</span></a>
+<a href="https://luajit.org/download.html">Download <span class="ext">&raquo;</span></a>
 </li><li>
 <a class="current" href="install.html">Installation</a>
 </li><li>
@@ -73,17 +73,12 @@ td.compatno {
 </li></ul>
 </li><li>
 <a href="status.html">Status</a>
-<ul><li>
-<a href="changes.html">Changes</a>
-</li></ul>
 </li><li>
 <a href="faq.html">FAQ</a>
 </li><li>
-<a href="http://luajit.org/performance.html">Performance <span class="ext">&raquo;</span></a>
-</li><li>
 <a href="http://wiki.luajit.org/">Wiki <span class="ext">&raquo;</span></a>
 </li><li>
-<a href="http://luajit.org/list.html">Mailing List <span class="ext">&raquo;</span></a>
+<a href="https://luajit.org/list.html">Mailing List <span class="ext">&raquo;</span></a>
 </li></ul>
 </div>
 <div id="main">
@@ -175,12 +170,11 @@ Please read the instructions given in these files, before changing
 any settings.
 </p>
 <p>
-LuaJIT on x64 currently uses 32 bit GC objects by default.
-<tt>LJ_GC64</tt> mode may be explicitly enabled:
-add <tt>XCFLAGS=-DLUAJIT_ENABLE_GC64</tt> to the make command or run
-<tt>msvcbuild gc64</tt> for MSVC/WinSDK. Please check the note
-about the <a href="extensions.html#string_dump">bytecode format</a>
-differences, too.
+All LuaJIT 64 bit ports use 64 bit GC objects by default (<tt>LJ_GC64</tt>).
+For x64, you can select the old 32-on-64 bit mode by adding
+<tt>XCFLAGS=-DLUAJIT_DISABLE_GC64</tt> to the make command.
+Please check the note about the
+<a href="extensions.html#string_dump">bytecode format</a> differences, too.
 </p>
 
 <h2 id="posix">POSIX Systems (Linux, OSX, *BSD etc.)</h2>
@@ -251,7 +245,7 @@ Obviously the prefixes given during build and installation need to be the same.
 <p>
 Either install one of the open source SDKs
 (<a href="http://mingw.org/"><span class="ext">&raquo;</span>&nbsp;MinGW</a> or
-<a href="http://www.cygwin.com/"><span class="ext">&raquo;</span>&nbsp;Cygwin</a>), which come with a modified
+<a href="https://www.cygwin.com/">Cygwin</a>), which come with a modified
 GCC plus the required development headers.
 </p>
 <p>
@@ -427,15 +421,9 @@ make CROSS=mips-linux- TARGET_CFLAGS="-mips64r2 -mabi=64"
 make CROSS=mipsel-linux- TARGET_CFLAGS="-mips64r2 -mabi=64"
 </pre>
 <p>
-You can cross-compile for <b id="android">Android</b> using the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>.
-The environment variables need to match the install locations and the
-desired target platform. E.g. Android&nbsp;4.0 corresponds to ABI level&nbsp;14.
-For details check the folder <tt>docs</tt> in the NDK directory.
-</p>
-<p>
-Only a few common variations for the different CPUs, ABIs and platforms
-are listed. Please use your own judgement for which combination you want
-to build/deploy or which lowest common denominator you want to pick:
+You can cross-compile for <b id="android">Android</b> using the <a href="https://developer.android.com/ndk/">Android NDK</a>.
+Please adapt the environment variables to match the install locations and the
+desired target platform. E.g. Android&nbsp;4.1 corresponds to ABI level&nbsp;16.
 </p>
 <pre class="code">
 # Android/ARM, armeabi (ARMv5TE soft-float), Android 2.2+ (Froyo)
@@ -472,7 +460,7 @@ NDKF="--sysroot $NDK/platforms/android-$NDKABI/arch-x86"
 make HOST_CC="gcc -m32" CROSS=$NDKP TARGET_FLAGS="$NDKF"
 </pre>
 <p>
-You can cross-compile for <b id="ios">iOS 3.0+</b> (iPhone/iPad) using the <a href="http://developer.apple.com/devcenter/ios/index.action"><span class="ext">&raquo;</span>&nbsp;iOS SDK</a>:
+You can cross-compile for <b id="ios">iOS 3.0+</b> (iPhone/iPad) using the <a href="https://developer.apple.com/ios/">iOS SDK</a>:
 </p>
 <p style="font-size: 8pt;">
 Note: <b>the JIT compiler is disabled for iOS</b>, because regular iOS Apps
@@ -614,7 +602,7 @@ Make sure the <tt>jit</tt> library is loaded or the JIT compiler
 will not be activated.</li>
 <li>The <tt>bit.*</tt> module for bitwise operations
 is already built-in. There's no need to statically link
-<a href="http://bitop.luajit.org/"><span class="ext">&raquo;</span>&nbsp;Lua BitOp</a> to your application.</li>
+<a href="https://bitop.luajit.org/">Lua BitOp</a> to your application.</li>
 </ul>
 
 <h2 id="distro">Hints for Distribution Maintainers</h2>

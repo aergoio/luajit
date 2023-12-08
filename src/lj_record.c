@@ -540,10 +540,10 @@ static LoopEvent rec_iterl(jit_State *J, const BCIns iterins)
 }
 
 /* Record LOOP/JLOOP. Now, that was easy. */
-static LoopEvent rec_loop(jit_State *J, BCReg ra)
+static LoopEvent rec_loop(jit_State *J, BCReg ra, int skip)
 {
   if (ra < J->maxslot) J->maxslot = ra;
-  J->pc++;
+  J->pc += skip;
   return LOOPEV_ENTER;
 }
 
@@ -886,6 +886,9 @@ void lj_record_ret(jit_State *J, BCReg rbase, ptrdiff_t gotresults)
       TRef tr = gotresults ? J->base[cbase+rbase] : TREF_NIL;
       if (bslot != J->maxslot) {  /* Concatenate the remainder. */
 	TValue *b = J->L->base, save;  /* Simulate lower frame and result. */
+	/* Can't handle MM_concat + CALLT + fast func side-effects. */
+	if (J->postproc != LJ_POST_NONE)
+	  lj_trace_err(J, LJ_TRERR_NYIRETL);
 	J->base[J->maxslot] = tr;
 	copyTV(J->L, &save, b-(2<<LJ_FR2));
 	if (gotresults)
@@ -1778,6 +1781,8 @@ static void rec_varg(jit_State *J, BCReg dst, ptrdiff_t nresults)
     } else if (dst + nresults > J->maxslot) {
       J->maxslot = dst + (BCReg)nresults;
     }
+    if (J->baseslot + J->maxslot >= LJ_MAX_JSLOTS)
+      lj_trace_err(J, LJ_TRERR_STACKOV);
     for (i = 0; i < nresults; i++)
       J->base[dst+i] = i < nvararg ? getslot(J, i - nvararg - 1 - LJ_FR2) : TREF_NIL;
   } else {  /* Unknown number of varargs passed to trace. */
@@ -1809,15 +1814,17 @@ static void rec_varg(jit_State *J, BCReg dst, ptrdiff_t nresults)
       }
       for (i = nvararg; i < nresults; i++)
 	J->base[dst+i] = TREF_NIL;
-      if (dst + (BCReg)nresults > J->maxslot)
-	J->maxslot = dst + (BCReg)nresults;
+      J->maxslot = dst + (BCReg)nresults;
     } else if (select_detect(J)) {  /* y = select(x, ...) */
       TRef tridx = J->base[dst-1];
       TRef tr = TREF_NIL;
       ptrdiff_t idx = lj_ffrecord_select_mode(J, tridx, &J->L->base[dst-1]);
       if (idx < 0) goto nyivarg;
-      if (idx != 0 && !tref_isinteger(tridx))
+      if (idx != 0 && !tref_isinteger(tridx)) {
+	if (tref_isstr(tridx))
+	  tridx = emitir(IRTG(IR_STRTO, IRT_NUM), tridx, 0);
 	tridx = emitir(IRTGI(IR_CONV), tridx, IRCONV_INT_NUM|IRCONV_INDEX);
+      }
       if (idx != 0 && tref_isk(tridx)) {
 	emitir(IRTGI(idx <= nvararg ? IR_GE : IR_LT),
 	       fr, lj_ir_kint(J, frofs+8*(int32_t)idx));
@@ -1884,7 +1891,7 @@ static TRef rec_tnew(jit_State *J, uint32_t ah)
 static TRef rec_cat(jit_State *J, BCReg baseslot, BCReg topslot)
 {
   TRef *top = &J->base[topslot];
-  TValue savetv[5];
+  TValue savetv[5+LJ_FR2];
   BCReg s;
   RecordIndex ix;
   lua_assert(baseslot < topslot);
@@ -2392,7 +2399,7 @@ void lj_record_ins(jit_State *J)
     rec_loop_interp(J, pc, rec_iterl(J, *pc));
     break;
   case BC_LOOP:
-    rec_loop_interp(J, pc, rec_loop(J, ra));
+    rec_loop_interp(J, pc, rec_loop(J, ra, 1));
     break;
 
   case BC_JFORL:
@@ -2402,7 +2409,8 @@ void lj_record_ins(jit_State *J)
     rec_loop_jit(J, rc, rec_iterl(J, traceref(J, rc)->startins));
     break;
   case BC_JLOOP:
-    rec_loop_jit(J, rc, rec_loop(J, ra));
+    rec_loop_jit(J, rc, rec_loop(J, ra,
+				 !bc_isret(bc_op(traceref(J, rc)->startins))));
     break;
 
   case BC_IFORL:
@@ -2595,9 +2603,11 @@ void lj_record_setup(jit_State *J)
     }
     lj_snap_replay(J, T);
   sidecheck:
-    if (traceref(J, J->cur.root)->nchild >= J->param[JIT_P_maxside] ||
-	T->snap[J->exitno].count >= J->param[JIT_P_hotexit] +
-				    J->param[JIT_P_tryside]) {
+    if ((traceref(J, J->cur.root)->nchild >= J->param[JIT_P_maxside] ||
+	 T->snap[J->exitno].count >= J->param[JIT_P_hotexit] +
+				     J->param[JIT_P_tryside]) &&
+	!(bc_op(*J->pc) == BC_JLOOP &&
+	  bc_op(traceref(J, bc_d(*J->pc))->startins) == BC_ITERN)) {
       lj_record_stop(J, LJ_TRLINK_INTERP, 0);
     }
   } else {  /* Root trace. */

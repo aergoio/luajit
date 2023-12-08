@@ -133,7 +133,7 @@
   _(XBAR,	S , ___, ___) \
   \
   /* Type conversions. */ \
-  _(CONV,	NW, ref, lit) \
+  _(CONV,	N , ref, lit) \
   _(TOBIT,	N , ref, ref) \
   _(TOSTR,	N , ref, lit) \
   _(STRTO,	N , ref, ___) \
@@ -562,6 +562,11 @@ typedef union IRIns {
   TValue tv;		/* TValue constant (overlaps entire slot). */
 } IRIns;
 
+#define ir_isk64(ir) \
+  ((ir)->o == IR_KNUM || (ir)->o == IR_KINT64 || \
+   (LJ_GC64 && \
+    ((ir)->o == IR_KGC || (ir)->o == IR_KPTR || (ir)->o == IR_KKPTR)))
+
 #define ir_kgc(ir)	check_exp((ir)->o == IR_KGC, gcref((ir)[LJ_GC64].gcr))
 #define ir_kstr(ir)	(gco2str(ir_kgc((ir))))
 #define ir_ktab(ir)	(gco2tab(ir_kgc((ir))))
@@ -569,12 +574,7 @@ typedef union IRIns {
 #define ir_kcdata(ir)	(gco2cd(ir_kgc((ir))))
 #define ir_knum(ir)	check_exp((ir)->o == IR_KNUM, &(ir)[1].tv)
 #define ir_kint64(ir)	check_exp((ir)->o == IR_KINT64, &(ir)[1].tv)
-#define ir_k64(ir) \
-  check_exp((ir)->o == IR_KNUM || (ir)->o == IR_KINT64 || \
-	    (LJ_GC64 && \
-	     ((ir)->o == IR_KGC || \
-	      (ir)->o == IR_KPTR || (ir)->o == IR_KKPTR)), \
-	    &(ir)[1].tv)
+#define ir_k64(ir)	check_exp(ir_isk64(ir), &(ir)[1].tv)
 #define ir_kptr(ir) \
   check_exp((ir)->o == IR_KPTR || (ir)->o == IR_KKPTR, \
     mref((ir)[LJ_GC64].ptr, void))
@@ -586,5 +586,13 @@ static LJ_AINLINE int ir_sideeff(IRIns *ir)
 }
 
 LJ_STATIC_ASSERT((int)IRT_GUARD == (int)IRM_W);
+
+/* Replace IR instruction with NOP. */
+static LJ_AINLINE void lj_ir_nop(IRIns *ir)
+{
+  ir->ot = IRT(IR_NOP, IRT_NIL);
+  ir->op1 = ir->op2 = 0;
+  ir->prev = 0;
+}
 
 #endif
