@@ -45,7 +45,7 @@ static LJ_AINLINE MCode *emit_op(x86Op xo, Reg rr, Reg rb, Reg rx,
     *(uint32_t *)(p+delta-5) = (uint32_t)xo;
     return p+delta-5;
   }
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
   if (__builtin_constant_p(xo) && n == -2)
     p[delta-2] = (MCode)(xo >> 24);
   else if (__builtin_constant_p(xo) && n == -3)
@@ -559,10 +559,7 @@ static void emit_storeofs(ASMState *as, IRIns *ir, Reg r, Reg base, int32_t ofs)
 static void emit_addptr(ASMState *as, Reg r, int32_t ofs)
 {
   if (ofs) {
-    if ((as->flags & JIT_F_LEA_AGU))
-      emit_rmro(as, XO_LEA, r|REX_GC64, r, ofs);
-    else
-      emit_gri(as, XG_ARITHi(XOg_ADD), r|REX_GC64, ofs);
+    emit_gri(as, XG_ARITHi(XOg_ADD), r|REX_GC64, ofs);
   }
 }
 
