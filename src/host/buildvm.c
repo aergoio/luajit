@@ -513,6 +513,19 @@ int main(int argc, char **argv)
   }
   fclose(ctx->fp);
 
+  // cleanup
+  free(ctx->code);
+  free(ctx->glob);
+  for(int i=0; i<=ctx->nsym; i++) {
+    free((void*)ctx->sym[i].name);
+  }
+  free(ctx->sym);
+  for(int i=0; i<ctx->nrelocsym; i++) {
+    free((void*)ctx->relocsym[i]);
+  }
+  free(ctx->relocsym);
+  free(ctx->bc_ofs);
+  free((void*)ctx->beginsym);
+
   return 0;
 }
-
