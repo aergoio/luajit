@@ -148,6 +148,9 @@ LJLIB_ASM(setmetatable)		LJLIB_REC(.)
 
 LJLIB_CF(getfenv)		LJLIB_REC(.)
 {
+  if (luaL_hardforkversion(L) >= 4) {
+    lj_err_callermsg(L, LUA_QL("getfenv") " not supported");
+  }
   GCfunc *fn;
   cTValue *o = L->base;
   lua_gasuse(L, GAS_SLOW);
@@ -165,6 +168,9 @@ LJLIB_CF(getfenv)		LJLIB_REC(.)
 
 LJLIB_CF(setfenv)
 {
+  if (luaL_hardforkversion(L) >= 4) {
+    lj_err_callermsg(L, LUA_QL("setfenv") " not supported");
+  }
   GCfunc *fn;
   GCtab *t = lj_lib_checktab(L, 2);
   cTValue *o = L->base;
@@ -556,6 +562,7 @@ LUALIB_API int luaopen_base(lua_State *L)
   lua_pushliteral(L, LUA_VERSION);  /* top-3. */
   newproxy_weaktable(L);  /* top-2. */
   LJ_LIB_REG(L, "_G", base);
+  //LJ_LIB_REG(L, LUA_COLIBNAME, coroutine);
   return 1;
 }
 

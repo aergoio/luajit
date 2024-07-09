@@ -1,5 +1,8 @@
 #include "lua.h"
 #include "lauxlib.h"
+
+#if LJ_ENABLE_DEBUG
+
 #include "lj_obj.h"
 #include "lj_gc.h"
 #include "lj_err.h"
@@ -133,3 +136,5 @@ int luaopen_debugaux(lua_State *L)
     }
     return 0;
 }
+
+#endif

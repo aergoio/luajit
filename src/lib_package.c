@@ -169,6 +169,12 @@ static int lj_cf_package_require(lua_State *L)
       luaL_error(L, "loop or previous error loading module " LUA_QS, name);
     return 1;  /* package is already loaded */
   }
+#if LJ_ENABLE_DEBUG
+  // 'require' is available on debug mode
+#else
+  return 0;
+  // the code bellow is not available on release mode
+#endif
   /* else must load it; iterate over available loaders */
   lua_getfield(L, LUA_ENVIRONINDEX, "loaders");
   if (!lua_istable(L, -1))
@@ -328,6 +334,10 @@ LUALIB_API int luaopen_package(lua_State *L)
 #if LJ_ENABLE_DEBUG
   int noenv;
 #endif
+  if (luaL_hardforkversion(L) >= 4) {
+    // package and require are not available starting on hardfork 4
+    return 0;
+  }
   luaL_register(L, LUA_LOADLIBNAME, package_lib);
   lua_copy(L, -1, LUA_ENVIRONINDEX);
   lua_createtable(L, sizeof(package_loaders)/sizeof(package_loaders[0])-1, 0);
@@ -358,4 +368,3 @@ LUALIB_API int luaopen_package(lua_State *L)
   lua_pop(L, 1);
   return 1;
 }
-

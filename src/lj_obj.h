@@ -625,11 +625,12 @@ typedef struct global_State {
   uint8_t syserror;
   uint8_t uncatchablerror;
   uint8_t checkmaxmem;
-  int service;
-  int hardfork_version;
+  uint8_t use_gas;
+  int16_t service;
+  int16_t hardfork_version;
   int inst_count;
   int inst_limit;
-  uint8_t use_gas;
+  uint32_t user_total;	/* Memory allocated by the script */
 } global_State;
 
 #define mainthread(g)	(&gcref(g->mainthref)->th)

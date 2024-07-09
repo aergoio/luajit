@@ -688,7 +688,9 @@ int LJ_FASTCALL lj_gc_step(lua_State *L)
   if (g->gc.total > g->gc.threshold)
     g->gc.debt += g->gc.total - g->gc.threshold;
   do {
-    lua_gasuse(L, GAS_SLOW);
+    if (g->hardfork_version < 4) {
+      lua_gasuse(L, GAS_SLOW);
+    }
     lim -= (GCSize)gc_onestep(L);
     if (g->gc.state == GCSpause) {
       g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
@@ -811,7 +813,7 @@ void lj_gc_barriertrace(global_State *g, uint32_t traceno)
 }
 #endif
 
-static void lj_mem_gas(lua_State *L, GCSize osz, GCSize nsz)
+static void lj_mem_gas_legacy(lua_State *L, GCSize osz, GCSize nsz)
 {
   global_State *g = G(L);
   GCSize ntsz = (g->gc.total - osz) + nsz;
@@ -820,6 +822,36 @@ static void lj_mem_gas(lua_State *L, GCSize osz, GCSize nsz)
     if (L->status == LUA_OK)
         lua_gasuse_mul(L, GAS_MEM, d);
     g->gc.max = ntsz;
+  }
+}
+
+void lj_mem_gas(lua_State *L, GCSize osz, GCSize nsz)
+{
+  global_State *g = G(L);
+  // V4: fix gas computation - do not count memory from aergo modules
+  if (g->hardfork_version >= 4) {
+    // only compute memory usage if gas is enabled
+    GG_State *gg = L2GG(L);
+    if (gg->enable_gas == 0) return;
+    // update current memory usage
+    if (osz > g->user_total) return;
+    g->user_total -= osz;
+    g->user_total += nsz;
+    // if current memory usage is greater than maximum memory usage
+    if (g->user_total > g->gc.max) {
+      // if we are not in an error state
+      if (L->status == LUA_OK) {
+        // compute the difference
+        GCSize d = g->user_total - g->gc.max;
+        // update gas
+        lua_gasuse_mul(L, GAS_MEM, d);
+      }
+      // update maximum memory usage
+      g->gc.max = g->user_total;
+    }
+  } else {
+    // use legacy gas computation for hardfork <= 3
+    lj_mem_gas_legacy(L, osz, nsz);
   }
 }
 

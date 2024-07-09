@@ -544,7 +544,7 @@ static int pmain(lua_State *L)
   /* Stop collector during library initialization. */
   lua_gc(L, LUA_GCSTOP, 0);
   luaL_openlibs(L);
-#if !LJ_ENABLE_DEBUG
+#if LJ_ENABLE_DEBUG
   luaopen_debugaux(L);
   luaopen_debug(L);
   luaopen_io(L);
