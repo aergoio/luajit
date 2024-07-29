@@ -626,7 +626,8 @@ typedef struct global_State {
   uint8_t uncatchablerror;
   uint8_t checkmaxmem;
   uint8_t use_gas;
-  int16_t service;
+  bool loading;  /* true if the vm is loading a contract, running on global scope */
+  bool reserved;
   int16_t hardfork_version;
   int inst_count;
   int inst_limit;
