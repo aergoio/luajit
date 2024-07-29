@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "lua.h"
 
@@ -171,8 +172,9 @@ LUALIB_API void luaL_setinstcount(lua_State *L, int count);
 LUALIB_API void luaL_enablemaxmem(lua_State *L);
 LUALIB_API void luaL_disablemaxmem(lua_State *L);
 
-LUALIB_API void luaL_set_service(lua_State *L, int service);
-LUALIB_API int luaL_service(lua_State *L);
+// flag for vm loading a contract, running on global scope
+LUALIB_API void luaL_set_loading(lua_State *L, bool loading);
+LUALIB_API bool luaL_is_loading(lua_State *L);
 
 LUALIB_API void luaL_set_hardforkversion(lua_State *L, int version);
 LUALIB_API int luaL_hardforkversion(lua_State *L);

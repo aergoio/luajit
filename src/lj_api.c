@@ -1350,14 +1350,16 @@ LUALIB_API void luaL_disablemaxmem(lua_State *L)
   lj_setcheckmaxmem(L, 0);
 }
 
-LUALIB_API void luaL_set_service(lua_State *L, int service)
+// sets the vm to loading a contract, running on global scope
+LUALIB_API void luaL_set_loading(lua_State *L, bool loading)
 {
-  G(L)->service = service;
+  G(L)->loading = loading;
 }
 
-LUALIB_API int luaL_service(lua_State *L)
+// returns true if the vm is loading a contract, running on global scope
+LUALIB_API bool luaL_is_loading(lua_State *L)
 {
-  return G(L)->service;
+  return G(L)->loading;
 }
 
 LUALIB_API void luaL_set_hardforkversion(lua_State *L, int version)
