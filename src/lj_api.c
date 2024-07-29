@@ -1299,9 +1299,9 @@ LUA_API void lua_setallocf(lua_State *L, lua_Alloc f, void *ud)
   g->allocf = f;
 }
 
-LUALIB_API int luaL_hassyserror(lua_State *L)
+LUALIB_API bool luaL_hassyserror(lua_State *L)
 {
-  return lj_err_hassys(L);
+  return lj_err_hassys(L) != 0;
 }
 
 LUALIB_API void luaL_setsyserror(lua_State *L)
@@ -1309,9 +1309,9 @@ LUALIB_API void luaL_setsyserror(lua_State *L)
   lj_err_setsys(L);
 }
 
-LUALIB_API int luaL_hasuncatchablerror (lua_State *L)
+LUALIB_API bool luaL_hasuncatchablerror (lua_State *L)
 {
-  return lj_err_hasuncatchable(L);
+  return lj_err_hasuncatchable(L) != 0;
 }
 
 LUALIB_API void luaL_setuncatchablerror (lua_State *L)

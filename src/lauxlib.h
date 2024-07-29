@@ -11,7 +11,6 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include <stdbool.h>
 
 #include "lua.h"
 
@@ -160,9 +159,9 @@ LUALIB_API void (luaL_pushresult) (luaL_Buffer *B);
 
 /* }====================================================== */
 
-LUALIB_API int (luaL_hassyserror) (lua_State *L);
+LUALIB_API bool (luaL_hassyserror) (lua_State *L);
 LUALIB_API void (luaL_setsyserror) (lua_State *L);
-LUALIB_API int (luaL_hasuncatchablerror) (lua_State *L);
+LUALIB_API bool (luaL_hasuncatchablerror) (lua_State *L);
 LUALIB_API void (luaL_setuncatchablerror) (lua_State *L);
 LUALIB_API int (luaL_throwerror) (lua_State *L);
 
