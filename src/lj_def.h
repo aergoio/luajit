@@ -46,24 +46,24 @@ typedef unsigned int uintptr_t;
 #include <stdlib.h>
 
 /* Various VM limits. */
-#define LJ_MAX_MEM32	0x7fffff00	/* Max. 32 bit memory allocation. */
-#define LJ_MAX_MEM64	((uint64_t)1<<47)  /* Max. 64 bit memory allocation. */
+#define LJ_MAX_MEM32	0x8000000	/* Max. 32 bit memory allocation: 128MB */
+#define LJ_MAX_MEM64	0x8000000  // ((uint64_t)1<<47)  /* Max. 64 bit memory allocation. */
 /* Max. total memory allocation. */
 #define LJ_MAX_MEM	(LJ_GC64 ? LJ_MAX_MEM64 : LJ_MAX_MEM32)
 #define LJ_MAX_ALLOC	LJ_MAX_MEM	/* Max. individual allocation length. */
-#define LJ_MAX_STR	LJ_MAX_MEM32	/* Max. string length. */
+#define LJ_MAX_STR	(64*1024*1024)	/* Max. string length. */
 #define LJ_MAX_BUF	LJ_MAX_MEM32	/* Max. buffer length. */
 #define LJ_MAX_UDATA	LJ_MAX_MEM32	/* Max. userdata length. */
 
-#define LJ_MAX_STRTAB	(1<<26)		/* Max. string table size. */
-#define LJ_MAX_HBITS	26		/* Max. hash bits. */
-#define LJ_MAX_ABITS	28		/* Max. bits of array key. */
+#define LJ_MAX_STRTAB	LJ_MAX_MEM32 //(1<<26)		/* Max. string table size. */
+#define LJ_MAX_HBITS	17		/* Max. hash bits. */
+#define LJ_MAX_ABITS	17		/* Max. bits of array key. */
 #define LJ_MAX_ASIZE	((1<<(LJ_MAX_ABITS-1))+1)  /* Max. array part size. */
 #define LJ_MAX_COLOSIZE	16		/* Max. elems for colocated array. */
 
 #define LJ_MAX_LINE	LJ_MAX_MEM32	/* Max. source code line number. */
 #define LJ_MAX_XLEVEL	200		/* Max. syntactic nesting level. */
-#define LJ_MAX_BCINS	(1<<26)		/* Max. # of bytecode instructions. */
+#define LJ_MAX_BCINS	LJ_MAX_MEM32 / 4  //(1<<26)		/* Max. # of bytecode instructions. */
 #define LJ_MAX_SLOTS	250		/* Max. # of slots in a Lua func. */
 #define LJ_MAX_LOCVAR	200		/* Max. # of local variables. */
 #define LJ_MAX_UPVAL	60		/* Max. # of upvalues. */

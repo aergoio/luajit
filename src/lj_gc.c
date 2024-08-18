@@ -32,7 +32,7 @@
 #define GCSWEEPMAX	40
 #define GCSWEEPCOST	10
 #define GCFINALIZECOST	100
-#define GCMEMMAXSIZE	(10*1024*1024)
+#define GCMEMMAXSIZE	(128*1024*1024)
 
 /* Macros to set GCobj colors and flags. */
 #define white2gray(x)		((x)->gch.marked &= (uint8_t)~LJ_GC_WHITES)
