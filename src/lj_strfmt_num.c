@@ -456,7 +456,8 @@ static char *lj_strfmt_wfnum(lua_State *L, SBuf *sb, SFormat sf, lua_Number n, c
 	    prec--;
 	    if (!i) {
 	      if (ndlo == ndhi) { prec = 0; break; }
-	      lj_strfmt_wuint9(tail, nd[++ndlo]);
+	      ndlo = (ndlo + 1) & 0x3f;
+	      lj_strfmt_wuint9(tail, nd[ndlo]);
 	      i = 9;
 	    }
 	  }

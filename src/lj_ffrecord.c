@@ -96,6 +96,14 @@ static ptrdiff_t results_wanted(jit_State *J)
     return -1;
 }
 
+static TValue *rec_stop_stitch_cp(lua_State *L, lua_CFunction dummy, void *ud)
+{
+  jit_State *J = (jit_State *)ud;
+  lj_record_stop(J, LJ_TRLINK_STITCH, 0);
+  UNUSED(L); UNUSED(dummy);
+  return NULL;
+}
+
 /* Trace stitching: add continuation below frame to start a new trace. */
 static void recff_stitch(jit_State *J)
 {
@@ -106,6 +114,7 @@ static void recff_stitch(jit_State *J)
   TValue *nframe = base + 1 + LJ_FR2;
   const BCIns *pc = frame_pc(base-1);
   TValue *pframe = frame_prevl(base-1);
+  int errcode;
 
   /* Move func + args up in Lua stack and insert continuation. */
   memmove(&base[1], &base[-1-LJ_FR2], sizeof(TValue)*nslot);
@@ -130,13 +139,21 @@ static void recff_stitch(jit_State *J)
   J->baseslot += 2 + LJ_FR2;
   J->framedepth++;
 
-  lj_record_stop(J, LJ_TRLINK_STITCH, 0);
+  errcode = lj_vm_cpcall(L, NULL, J, rec_stop_stitch_cp);
 
   /* Undo Lua stack changes. */
   memmove(&base[-1-LJ_FR2], &base[1], sizeof(TValue)*nslot);
   setframe_pc(base-1, pc);
   L->base -= 2 + LJ_FR2;
   L->top -= 2 + LJ_FR2;
+
+  if (errcode) {
+    if (errcode == LUA_ERRRUN)
+      copyTV(L, L->top-1, L->top + (1 + LJ_FR2));
+    else
+      setintV(L->top-1, (int32_t)LJ_TRERR_RECERR);
+    lj_err_throw(L, errcode);  /* Propagate errors. */
+  }
 }
 
 /* Fallback handler for fast functions that are not recorded (yet). */
@@ -860,6 +877,7 @@ static void LJ_FASTCALL recff_string_format(jit_State *J, RecordFFData *rd)
   TRef hdr, tr;
   FormatState fs;
   SFormat sf;
+  int nfmt = 0;
   /* Specialize to the format string. */
   emitir(IRTG(IR_EQ, IRT_STR), trfmt, lj_ir_kstr(J, fmt));
   tr = hdr = recff_bufhdr(J);
@@ -929,6 +947,7 @@ static void LJ_FASTCALL recff_string_format(jit_State *J, RecordFFData *rd)
       recff_nyiu(J, rd);
       return;
     }
+    if (++nfmt > 100) lj_trace_err(J, LJ_TRERR_TRACEOV);
   }
   J->base[0] = emitir(IRT(IR_BUFSTR, IRT_STR), tr, hdr);
 }
@@ -980,6 +999,15 @@ static void LJ_FASTCALL recff_table_new(jit_State *J, RecordFFData *rd)
 {
   TRef tra = lj_opt_narrow_toint(J, J->base[0]);
   TRef trh = lj_opt_narrow_toint(J, J->base[1]);
+  if (tref_isk(tra) && tref_isk(trh)) {
+    int32_t a = IR(tref_ref(tra))->i;
+    if (a < 0x7fff) {
+      uint32_t hbits = hsize2hbits(IR(tref_ref(trh))->i);
+      a = a > 0 ? a+1 : 0;
+      J->base[0] = emitir(IRTG(IR_TNEW, IRT_TAB), (uint32_t)a, hbits);
+      return;
+    }
+  }
   J->base[0] = lj_ir_call(J, IRCALL_lj_tab_new_ah, tra, trh);
   UNUSED(rd);
 }
