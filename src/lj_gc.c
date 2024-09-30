@@ -27,6 +27,7 @@
 #include "lj_trace.h"
 #include "lj_vm.h"
 #include "lj_gas.h"
+#include "lj_dispatch.h"
 
 #define GCSTEPSIZE	1024u
 #define GCSWEEPMAX	40
