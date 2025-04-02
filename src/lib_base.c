@@ -148,9 +148,11 @@ LJLIB_ASM(setmetatable)		LJLIB_REC(.)
 
 LJLIB_CF(getfenv)		LJLIB_REC(.)
 {
+#ifndef LJ_ENABLE_DEBUG
   if (luaL_hardforkversion(L) >= 4) {
     lj_err_callermsg(L, LUA_QL("getfenv") " not supported");
   }
+#endif
   GCfunc *fn;
   cTValue *o = L->base;
   lua_gasuse(L, GAS_SLOW);
@@ -168,9 +170,11 @@ LJLIB_CF(getfenv)		LJLIB_REC(.)
 
 LJLIB_CF(setfenv)
 {
+#ifndef LJ_ENABLE_DEBUG
   if (luaL_hardforkversion(L) >= 4) {
     lj_err_callermsg(L, LUA_QL("setfenv") " not supported");
   }
+#endif
   GCfunc *fn;
   GCtab *t = lj_lib_checktab(L, 2);
   cTValue *o = L->base;
