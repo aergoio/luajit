@@ -156,13 +156,12 @@ LUALIB_API int luaL_loadstring(lua_State *L, const char *s)
 
 /* -- Dump bytecode ------------------------------------------------------- */
 
-LUA_API int lua_dump(lua_State *L, lua_Writer writer, void *data)
+LUA_API int lua_dump(lua_State *L, lua_Writer writer, void *data, int strip)
 {
   cTValue *o = L->top-1;
   api_check(L, L->top > L->base);
   if (tvisfunc(o) && isluafunc(funcV(o)))
-    return lj_bcwrite(L, funcproto(funcV(o)), writer, data, 1);
+    return lj_bcwrite(L, funcproto(funcV(o)), writer, data, strip);
   else
     return 1;
 }
-
