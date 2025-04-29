@@ -1,7 +1,7 @@
 #include "lua.h"
 #include "lauxlib.h"
 
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
 
 #include "lj_obj.h"
 #include "lj_gc.h"

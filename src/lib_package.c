@@ -67,7 +67,7 @@ static void setprogdir(lua_State *L)
 
 /* ------------------------------------------------------------------------ */
 
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
 static int readable(const char *filename)
 {
   FILE *f = fopen(filename, "r");  /* try to open file */
@@ -129,7 +129,7 @@ static void loaderror(lua_State *L, const char *filename)
 
 static int lj_cf_package_loader_lua(lua_State *L)
 {
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
   const char *filename;
   const char *name = luaL_checkstring(L, 1);
   filename = findfile(L, name, "path");
@@ -169,7 +169,7 @@ static int lj_cf_package_require(lua_State *L)
       luaL_error(L, "loop or previous error loading module " LUA_QS, name);
     return 1;  /* package is already loaded */
   }
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
   // 'require' is available on debug mode
 #else
   return 0;
@@ -212,7 +212,7 @@ static int lj_cf_package_require(lua_State *L)
 
 /* ------------------------------------------------------------------------ */
 
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
 static void setfenv(lua_State *L)
 {
   lua_Debug ar;
@@ -285,7 +285,7 @@ static int lj_cf_package_seeall(lua_State *L)
 
 #define AUXMARK		"\1"
 
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
 static void setpath(lua_State *L, const char *fieldname, const char *envname,
 		    const char *def, int noenv)
 {
@@ -314,7 +314,7 @@ static const luaL_Reg package_lib[] = {
 };
 
 static const luaL_Reg package_global[] = {
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
   { "module",	lj_cf_package_module },
 #endif
   { "require",	lj_cf_package_require },
@@ -331,13 +331,14 @@ static const lua_CFunction package_loaders[] =
 LUALIB_API int luaopen_package(lua_State *L)
 {
   int i;
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
   int noenv;
-#endif
+#else
   if (luaL_hardforkversion(L) >= 4) {
     // package and require are not available starting on hardfork 4
     return 0;
   }
+#endif
   luaL_register(L, LUA_LOADLIBNAME, package_lib);
   lua_copy(L, -1, LUA_ENVIRONINDEX);
   lua_createtable(L, sizeof(package_loaders)/sizeof(package_loaders[0])-1, 0);
@@ -350,7 +351,7 @@ LUALIB_API int luaopen_package(lua_State *L)
   lua_setfield(L, -3, "searchers");
 #endif
   lua_setfield(L, -2, "loaders");
-#if LJ_ENABLE_DEBUG
+#ifdef LJ_ENABLE_DEBUG
   lua_getfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   noenv = lua_toboolean(L, -1);
   lua_pop(L, 1);
